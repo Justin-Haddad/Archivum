@@ -126,21 +126,9 @@ function App() {
       action: 'See it work'
     },
     { 
-      title: 'Track Your Progress', 
-      desc: 'Monitor your viewing habits: track episodes watched, chapters read, hours played. See your media journey unfold.',
-      tags: ['Progress'],
-      action: 'See it work'
-    },
-    { 
       title: 'Build Your Collection', 
       desc: 'Organize your media into custom collections. Create shelves for genres, moods, or any category you want.',
       tags: ['Collections'],
-      action: 'See it work'
-    },
-    { 
-      title: 'View Your Stats', 
-      desc: 'See beautiful visualizations of your media consumption. Track hours watched, ratings given, and discover patterns.',
-      tags: ['Stats'],
       action: 'See it work'
     },
   ]
@@ -519,33 +507,20 @@ function App() {
             <p className="hero-subtitle">
               Track your favorite movies, shows, books, and games. Rate what you love and discover what's next.
             </p>
-          </div>
-        </section>
-
-        {/* UI Mockup Section with Nature Background */}
-        <section className="ui-mockup-section">
-          <div className="nature-background">
-            <div className="landscape">
-              <div className="sky"></div>
-              <div className="mountains"></div>
-              <div className="hills"></div>
-              <div className="lake"></div>
-              <div className="sunflower-left">🌻</div>
-              <div className="sunflower-right">🌻</div>
-              <div className="clouds">
-                <div className="cloud cloud-1"></div>
-                <div className="cloud cloud-2"></div>
-                <div className="cloud cloud-3"></div>
-              </div>
-            </div>
-            <div className="ui-mockup-container">
-              <div className="ui-mockup">
-                <div className="mockup-input-box">
-                  <span className="mockup-icon">📎</span>
-                  <span className="mockup-text">Add "The Matrix" to my library and rate it 5 stars</span>
-                  <button className="mockup-send-btn">↑</button>
-                </div>
-              </div>
+            <div className="hero-video-container">
+              <video 
+                className="hero-video"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                src="/video.mp4"
+                onError={(e) => console.error('Video error:', e)}
+                onLoadedData={() => console.log('Video loaded successfully')}
+              >
+                Your browser does not support the video tag.
+              </video>
             </div>
           </div>
         </section>
@@ -566,7 +541,6 @@ function App() {
                   </div>
                 </div>
                 <p className="use-case-desc">{useCase.desc}</p>
-                <a href="#" className="use-case-link">{useCase.action} →</a>
               </div>
             ))}
           </div>
@@ -592,21 +566,6 @@ function App() {
         </div>
       </section>
 
-      {/* Features / Collections Section */}
-      <section className="features-section">
-        <div className="features-container">
-          <h2 className="section-title">Access features that organize your media for you</h2>
-          <div className="features-grid">
-            {features.map((feature, index) => (
-              <div key={index} className="feature-card">
-                <span className="feature-icon">{feature.icon}</span>
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-desc">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Stats Section - If User Logged In */}
       {user && (

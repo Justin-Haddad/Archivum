@@ -78,11 +78,70 @@ git push
 
 ## Troubleshooting
 
-### If you get authentication errors:
-- GitHub now requires a Personal Access Token instead of passwords
-- Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
-- Generate a new token with `repo` permissions
-- Use this token as your password when pushing
+### If you get authentication errors (like "Invalid username or token"):
+
+**GitHub requires a Personal Access Token instead of passwords.** Here's how to fix it:
+
+#### Step 1: Create a Personal Access Token
+
+1. Go to [GitHub.com](https://github.com) and sign in
+2. Click your profile picture (top right) → **Settings**
+3. Scroll down to **Developer settings** (left sidebar, near bottom)
+4. Click **Personal access tokens** → **Tokens (classic)**
+5. Click **Generate new token** → **Generate new token (classic)**
+6. Fill in:
+   - **Note**: "Archivum Project" (or any description)
+   - **Expiration**: Choose how long (90 days, 1 year, or no expiration)
+   - **Scopes**: Check **`repo`** (this gives full repository access)
+7. Click **Generate token** at the bottom
+8. **IMPORTANT**: Copy the token immediately! It looks like `ghp_xxxxxxxxxxxxxxxxxxxx` - you won't see it again!
+
+#### Step 2: Use the Token When Pushing
+
+When you run `git push`, it will ask for:
+- **Username**: Your GitHub username (e.g., `Justin-Haddad`)
+- **Password**: Paste your Personal Access Token (NOT your GitHub password)
+
+#### Alternative: Store Credentials (Easier for Future)
+
+You can configure git to remember your token:
+
+```bash
+# Store credentials in macOS Keychain (recommended)
+git config --global credential.helper osxkeychain
+
+# Then when you push, enter your token once and it will be saved
+git push -u origin main
+```
+
+#### Alternative 2: Use SSH Instead (Most Secure)
+
+If you prefer SSH authentication:
+
+1. Generate an SSH key (if you don't have one):
+   ```bash
+   ssh-keygen -t ed25519 -C "your_email@example.com"
+   # Press Enter to accept default location
+   # Optionally set a passphrase
+   ```
+
+2. Copy your public key:
+   ```bash
+   cat ~/.ssh/id_ed25519.pub
+   # Copy the entire output
+   ```
+
+3. Add to GitHub:
+   - Go to GitHub Settings → SSH and GPG keys
+   - Click "New SSH key"
+   - Paste your public key
+   - Save
+
+4. Change your remote URL to use SSH:
+   ```bash
+   git remote set-url origin git@github.com:Justin-Haddad/Archivum.git
+   git push -u origin main
+   ```
 
 ### If you need to change the remote URL:
 ```bash
