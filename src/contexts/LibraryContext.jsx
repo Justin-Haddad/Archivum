@@ -46,9 +46,13 @@ export const LibraryProvider = ({ children }) => {
   }
 
   // Add media to library
-  const addToLibrary = async (mediaItem) => {
+  const addToLibrary = async (mediaItem, rating = null) => {
     if (!user) {
       return { error: 'You must be logged in to add items to your library' }
+    }
+
+    if (rating !== null && (rating < 1 || rating > 10)) {
+      return { error: 'Rating must be between 1 and 10' }
     }
 
     try {
@@ -63,7 +67,7 @@ export const LibraryProvider = ({ children }) => {
             title: mediaItem.title,
             year: mediaItem.year || null,
             poster_url: mediaItem.poster_url || null,
-            rating: null, // No rating initially
+            rating: rating,
           }
         ])
         .select()

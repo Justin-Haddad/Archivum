@@ -208,6 +208,7 @@ function App() {
           </div>
           <nav className="nav">
             <a href="#home" className="nav-link" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Home</a>
+            <a href="#discover" className="nav-link" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Discover</a>
             <a href="/library" className="nav-link" onClick={(e) => { e.preventDefault(); navigate('/library'); }}>My Archive</a>
             <a href="#friends" className="nav-link">Friends</a>
             {user ? (
