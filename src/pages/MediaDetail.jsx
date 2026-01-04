@@ -107,6 +107,7 @@ function MediaDetail() {
 
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [selectedRating, setSelectedRating] = useState(null)
+  const [selectedWantToWatch, setSelectedWantToWatch] = useState(false)
 
   const handleAddToLibrary = () => {
     if (!user) {
@@ -121,6 +122,7 @@ function MediaDetail() {
     // Show rating modal instead of adding directly
     setShowRatingModal(true)
     setSelectedRating(null)
+    setSelectedWantToWatch(false)
   }
 
   const handleRatingSubmit = async () => {
@@ -137,39 +139,20 @@ function MediaDetail() {
       rating: details.vote_average || details.rating || details.aggregated_rating,
     }
 
-    const result = await addToLibrary(mediaItem, selectedRating)
+    const result = await addToLibrary(mediaItem, selectedRating, selectedWantToWatch)
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success(`Added ${mediaItem.title} to your library!${selectedRating ? ` (Rated ${selectedRating}/10)` : ''}`)
+      const messages = []
+      if (selectedRating) messages.push(`Rated ${selectedRating}/10`)
+      if (selectedWantToWatch) messages.push('Added to Backlog')
+      toast.success(`Added ${mediaItem.title} to your library!${messages.length > 0 ? ` (${messages.join(', ')})` : ''}`)
       setShowRatingModal(false)
       setSelectedRating(null)
+      setSelectedWantToWatch(false)
     }
   }
 
-  const handleSkipRating = async () => {
-    const mediaItem = {
-      media_type: details.media_type,
-      media_id: details.id.toString(),
-      title: details.title || details.name,
-      year: details.release_date ? new Date(details.release_date).getFullYear() : 
-            details.first_air_date ? new Date(details.first_air_date).getFullYear() :
-            details.first_release_date ? new Date(details.first_release_date).getFullYear() :
-            details.year || details.publish_date ? new Date(details.publish_date || details.year).getFullYear() : null,
-      poster_url: details.poster_url,
-      overview: details.overview || details.description,
-      rating: details.vote_average || details.rating || details.aggregated_rating,
-    }
-
-    const result = await addToLibrary(mediaItem, null)
-    if (result.error) {
-      toast.error(result.error)
-    } else {
-      toast.success(`Added ${mediaItem.title} to your library!`)
-      setShowRatingModal(false)
-      setSelectedRating(null)
-    }
-  }
 
   const renderStars = (rating, interactive = false, onStarClick = null) => {
     const stars = []
@@ -444,40 +427,46 @@ function MediaDetail() {
 
           {/* Rating Modal */}
           {showRatingModal && (
-            <div className="modal-overlay" onClick={() => { setShowRatingModal(false); setSelectedRating(null); }}>
-              <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <button className="modal-close" onClick={() => { setShowRatingModal(false); setSelectedRating(null); }}>×</button>
-                <h2 className="modal-title">Rate This {details.media_type === 'movie' ? 'Movie' : details.media_type === 'tv_show' ? 'TV Show' : details.media_type === 'book' ? 'Book' : 'Game'}</h2>
-                <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', fontWeight: 600, marginBottom: 'var(--space-md)' }}>
-                    {details.title || details.name}
-                  </h3>
-                  {details.poster_url && (
-                    <img 
-                      src={details.poster_url} 
-                      alt={details.title || details.name}
-                      style={{ width: '150px', height: 'auto', borderRadius: '12px', marginBottom: 'var(--space-lg)' }}
-                    />
-                  )}
-                  <p style={{ marginBottom: 'var(--space-xl)', color: 'var(--color-gray-dark)' }}>
-                    How would you rate this? (1-10)
-                  </p>
-                  <div className="stars-container" style={{ justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
-                    {renderStars(selectedRating || 0, true, (rating) => setSelectedRating(rating))}
-                    {selectedRating && (
-                      <span className="rating-value" style={{ marginLeft: 'var(--space-md)' }}>
-                        ({selectedRating}/10)
-                      </span>
-                    )}
-                  </div>
-                </div>
+        <div className="modal-overlay" onClick={() => { setShowRatingModal(false); setSelectedRating(null); setSelectedWantToWatch(false); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => { setShowRatingModal(false); setSelectedRating(null); setSelectedWantToWatch(false); }}>×</button>
+            <h2 className="modal-title">Add to Archive</h2>
+            <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
+              <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', fontWeight: 600, marginBottom: 'var(--space-md)' }}>
+                {details.title || details.name}
+              </h3>
+              {details.poster_url && (
+                <img 
+                  src={details.poster_url} 
+                  alt={details.title || details.name}
+                  style={{ width: '150px', height: 'auto', borderRadius: '12px', marginBottom: 'var(--space-lg)' }}
+                />
+              )}
+              <p style={{ marginBottom: 'var(--space-lg)', color: 'var(--color-gray-dark)' }}>
+                How would you rate this? (Optional)
+              </p>
+              <div className="stars-container" style={{ justifyContent: 'center', marginBottom: 'var(--space-xl)' }}>
+                {renderStars(selectedRating || 0, true, (rating) => setSelectedRating(rating))}
+                {selectedRating && (
+                  <span className="rating-value" style={{ marginLeft: 'var(--space-md)' }}>
+                    ({selectedRating}/10)
+                  </span>
+                )}
+              </div>
+              <div style={{ marginBottom: 'var(--space-xl)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)' }}>
+                <input
+                  type="checkbox"
+                  id="want-to-watch-detail"
+                  checked={selectedWantToWatch}
+                  onChange={(e) => setSelectedWantToWatch(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <label htmlFor="want-to-watch-detail" style={{ cursor: 'pointer', fontSize: '1rem', color: 'var(--color-gray-dark)' }}>
+                  Add to Backlog
+                </label>
+              </div>
+            </div>
                 <div className="modal-actions" style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'center' }}>
-                  <button 
-                    className="btn-secondary" 
-                    onClick={handleSkipRating}
-                  >
-                    Skip for Now
-                  </button>
                   <button 
                     className="btn-primary" 
                     onClick={handleRatingSubmit}

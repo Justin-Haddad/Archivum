@@ -2065,7 +2065,7 @@ p {
 
 .form-section {
   display: flex;
-    flex-direction: column;
+  flex-direction: column;
   gap: var(--space-sm);
 }
 
@@ -2124,7 +2124,7 @@ p {
 
 .avatar-actions {
   display: flex;
-    flex-direction: column;
+  flex-direction: column;
   gap: var(--space-sm);
 }
 
@@ -2152,7 +2152,7 @@ p {
 /* Settings */
 .settings-sections {
   display: flex;
-    flex-direction: column;
+  flex-direction: column;
   gap: var(--space-2xl);
   margin: var(--space-xl) 0;
 }
@@ -2250,9 +2250,9 @@ p {
 @media (max-width: 768px) {
   .container {
     padding: 0 var(--space-md);
-  }
-  
-  .hero-title {
+}
+
+.hero-title {
   font-size: 2.25rem;
   }
   
@@ -2663,6 +2663,32 @@ p {
     padding: var(--space-sm) var(--space-md);
     font-size: 0.9rem;
   }
+}
+
+/* Friends page tabs styling */
+.friends-page-tabs {
+  font-size: 0.9rem;
+  justify-content: flex-start;
+  margin-top: 0;
+  margin-bottom: var(--space-2xl);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: var(--space-md);
+}
+
+.friends-page-tabs .library-tab {
+  font-size: 0.9rem;
+  padding: var(--space-sm) var(--space-lg);
+}
+
+@media (max-width: 768px) {
+  .friends-page-tabs {
+    justify-content: center;
+  }
+  
+  .friends-page-tabs .library-tab {
+    font-size: 0.85rem;
+    padding: var(--space-sm) var(--space-md);
+  }
   
   .media-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -3060,7 +3086,7 @@ p {
 .privacy-option {
   flex: 1;
   display: flex;
-  flex-direction: column;
+    flex-direction: column;
   gap: var(--space-xs);
 }
 
@@ -3082,7 +3108,7 @@ p {
     align-items: center;
     text-align: center;
   }
-
+  
   .profile-actions-view {
     width: 100%;
     justify-content: center;
@@ -3130,6 +3156,107 @@ p {
   color: var(--color-gray-dark);
   line-height: 1.6;
   margin: 0 0 var(--space-2xl) 0;
+}
+
+/* Lists Page Styles */
+.list-card {
+  background: var(--color-white);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all var(--transition-base);
+}
+
+.list-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.list-card-content {
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-md);
+}
+
+.list-icon-large {
+  font-size: 3rem;
+  margin-bottom: var(--space-sm);
+}
+
+.list-card-title {
+  font-family: var(--font-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-black);
+  margin: 0;
+}
+
+.list-card-description {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  color: var(--color-gray-dark);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.list-card-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  width: 100%;
+  justify-content: center;
+}
+
+.btn-small {
+  padding: var(--space-xs) var(--space-md);
+  font-size: 0.9rem;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.icon-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.icon-option {
+  width: 50px;
+  height: 50px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  background: var(--color-white);
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-option:hover {
+  border-color: var(--color-black);
+  transform: scale(1.1);
+}
+
+.icon-option.selected {
+  border-color: var(--color-black);
+  background: var(--color-gray-light);
+  transform: scale(1.1);
 }
 
 /* Scrollbar */

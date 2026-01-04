@@ -14,7 +14,7 @@ export const useLibrary = () => {
   return context
 }
 
-// Library Provider Component
+  // Library Provider Component
 export const LibraryProvider = ({ children }) => {
   const { user } = useAuth()
   const [library, setLibrary] = useState([])
@@ -46,7 +46,7 @@ export const LibraryProvider = ({ children }) => {
   }
 
   // Add media to library
-  const addToLibrary = async (mediaItem, rating = null) => {
+  const addToLibrary = async (mediaItem, rating = null, wantToWatch = false) => {
     if (!user) {
       return { error: 'You must be logged in to add items to your library' }
     }
@@ -68,6 +68,7 @@ export const LibraryProvider = ({ children }) => {
             year: mediaItem.year || null,
             poster_url: mediaItem.poster_url || null,
             rating: rating,
+            want_to_watch: wantToWatch,
           }
         ])
         .select()
@@ -172,6 +173,42 @@ export const LibraryProvider = ({ children }) => {
     return library.filter(item => item.media_type === mediaType)
   }
 
+  // Toggle want to watch status
+  const toggleWantToWatch = async (libraryItemId, wantToWatch) => {
+    if (!user) {
+      return { error: 'You must be logged in' }
+    }
+
+    try {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('user_library')
+        .update({ 
+          want_to_watch: wantToWatch,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', libraryItemId)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Update local state
+      setLibrary(prev => 
+        prev.map(item => 
+          item.id === libraryItemId ? data : item
+        )
+      )
+
+      return { data, error: null }
+    } catch (error) {
+      return { data: null, error: error.message }
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Fetch library when user changes
   useEffect(() => {
     if (user) {
@@ -191,6 +228,7 @@ export const LibraryProvider = ({ children }) => {
     isInLibrary,
     getLibraryItem,
     getLibraryByType,
+    toggleWantToWatch,
   }
 
   return (

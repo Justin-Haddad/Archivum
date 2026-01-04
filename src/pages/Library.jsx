@@ -30,11 +30,13 @@ function Library() {
   const [showRatingModal, setShowRatingModal] = useState(false)
   const [selectedMediaItem, setSelectedMediaItem] = useState(null)
   const [selectedRating, setSelectedRating] = useState(null)
+  const [selectedWantToWatch, setSelectedWantToWatch] = useState(false)
   const [sortBy, setSortBy] = useState('date_added_desc')
   const [filterRating, setFilterRating] = useState('all')
   const [filterYear, setFilterYear] = useState('all')
   const [filterDateRange, setFilterDateRange] = useState('all')
-  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
+  const [filterWantToWatch, setFilterWantToWatch] = useState('all') // 'all', 'want', 'not_want'
+  const [viewMode, setViewMode] = useState('list') // 'grid' or 'list'
 
   // Media type configurations
   const mediaTypes = {
@@ -230,6 +232,13 @@ function Library() {
       }
     }
 
+    // Filter by want to watch
+    if (filterWantToWatch === 'want') {
+      filtered = filtered.filter(item => item.want_to_watch === true)
+    } else if (filterWantToWatch === 'not_want') {
+      filtered = filtered.filter(item => !item.want_to_watch || item.want_to_watch === false)
+    }
+
     // Sort
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
@@ -369,6 +378,7 @@ function Library() {
     // Show rating modal
     setSelectedMediaItem(mediaItem)
     setSelectedRating(null)
+    setSelectedWantToWatch(false)
     setShowRatingModal(true)
   }
 
@@ -376,35 +386,23 @@ function Library() {
   const handleRatingSubmit = async () => {
     if (!selectedMediaItem) return
 
-    const result = await addToLibrary(selectedMediaItem, selectedRating)
+    const result = await addToLibrary(selectedMediaItem, selectedRating, selectedWantToWatch)
     if (result.error) {
       toast.error(result.error)
     } else {
-      toast.success(`Added ${selectedMediaItem.title} to your library!${selectedRating ? ` (Rated ${selectedRating}/10)` : ''}`)
+      const messages = []
+      if (selectedRating) messages.push(`Rated ${selectedRating}/10`)
+      if (selectedWantToWatch) messages.push('Added to Backlog')
+      toast.success(`Added ${selectedMediaItem.title} to your library!${messages.length > 0 ? ` (${messages.join(', ')})` : ''}`)
       setShowSearch(false)
       setSearchQuery('')
       setShowRatingModal(false)
       setSelectedMediaItem(null)
       setSelectedRating(null)
+      setSelectedWantToWatch(false)
     }
   }
 
-  // Handle skip rating
-  const handleSkipRating = async () => {
-    if (!selectedMediaItem) return
-
-    const result = await addToLibrary(selectedMediaItem, null)
-    if (result.error) {
-      toast.error(result.error)
-    } else {
-      toast.success(`Added ${selectedMediaItem.title} to your library!`)
-      setShowSearch(false)
-      setSearchQuery('')
-      setShowRatingModal(false)
-      setSelectedMediaItem(null)
-      setSelectedRating(null)
-    }
-  }
 
   // Handle remove from library
   const handleRemoveFromLibrary = async (libraryItemId, title) => {
@@ -646,10 +644,10 @@ function Library() {
     <div className="page-container">
       {/* Rating Modal */}
       {showRatingModal && selectedMediaItem && (
-        <div className="modal-overlay" onClick={() => { setShowRatingModal(false); setSelectedMediaItem(null); setSelectedRating(null); }}>
+        <div className="modal-overlay" onClick={() => { setShowRatingModal(false); setSelectedMediaItem(null); setSelectedRating(null); setSelectedWantToWatch(false); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => { setShowRatingModal(false); setSelectedMediaItem(null); setSelectedRating(null); }}>×</button>
-            <h2 className="modal-title">Rate This {selectedMediaItem.media_type === 'movie' ? 'Movie' : selectedMediaItem.media_type === 'tv_show' ? 'TV Show' : selectedMediaItem.media_type === 'book' ? 'Book' : 'Game'}</h2>
+            <button className="modal-close" onClick={() => { setShowRatingModal(false); setSelectedMediaItem(null); setSelectedRating(null); setSelectedWantToWatch(false); }}>×</button>
+            <h2 className="modal-title">Add to Archive</h2>
             <div style={{ textAlign: 'center', marginBottom: 'var(--space-xl)' }}>
               <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', fontWeight: 600, marginBottom: 'var(--space-md)' }}>
                 {selectedMediaItem.title}
@@ -661,10 +659,10 @@ function Library() {
                   style={{ width: '150px', height: 'auto', borderRadius: '12px', marginBottom: 'var(--space-lg)' }}
                 />
               )}
-              <p style={{ marginBottom: 'var(--space-xl)', color: 'var(--color-gray-dark)' }}>
-                How would you rate this? (1-10)
+              <p style={{ marginBottom: 'var(--space-lg)', color: 'var(--color-gray-dark)' }}>
+                How would you rate this? (Optional)
               </p>
-              <div className="stars-container" style={{ justifyContent: 'center', marginBottom: 'var(--space-lg)' }}>
+              <div className="stars-container" style={{ justifyContent: 'center', marginBottom: 'var(--space-xl)' }}>
                 {renderStars(selectedRating || 0, true, (rating) => setSelectedRating(rating))}
                 {selectedRating && (
                   <span className="rating-value" style={{ marginLeft: 'var(--space-md)' }}>
@@ -672,14 +670,20 @@ function Library() {
                   </span>
                 )}
               </div>
+              <div style={{ marginBottom: 'var(--space-xl)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--space-sm)' }}>
+                <input
+                  type="checkbox"
+                  id="want-to-watch"
+                  checked={selectedWantToWatch}
+                  onChange={(e) => setSelectedWantToWatch(e.target.checked)}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                />
+                <label htmlFor="want-to-watch" style={{ cursor: 'pointer', fontSize: '1rem', color: 'var(--color-gray-dark)' }}>
+                  Add to Backlog
+                </label>
+              </div>
             </div>
             <div className="modal-actions" style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'center' }}>
-              <button 
-                className="btn-secondary" 
-                onClick={handleSkipRating}
-              >
-                Skip for Now
-              </button>
               <button 
                 className="btn-primary" 
                 onClick={handleRatingSubmit}
@@ -888,14 +892,28 @@ function Library() {
                       </select>
                     </div>
 
+                    <div className="filter-group">
+                      <label className="filter-group-label">Backlog:</label>
+                      <select 
+                        className="filter-select"
+                        value={filterWantToWatch}
+                        onChange={(e) => setFilterWantToWatch(e.target.value)}
+                      >
+                        <option value="all">All Items</option>
+                        <option value="want">Backlog</option>
+                        <option value="not_want">Not in Backlog</option>
+                      </select>
+                    </div>
+
                     {/* Clear Filters Button */}
-                    {(filterRating !== 'all' || filterYear !== 'all' || filterDateRange !== 'all') && (
+                    {(filterRating !== 'all' || filterYear !== 'all' || filterDateRange !== 'all' || filterWantToWatch !== 'all') && (
                       <button 
                         className="clear-filters-btn"
                         onClick={() => {
                           setFilterRating('all')
                           setFilterYear('all')
                           setFilterDateRange('all')
+                          setFilterWantToWatch('all')
                         }}
                       >
                         Clear Filters
@@ -906,18 +924,18 @@ function Library() {
                   <div className="library-view-controls">
                     <div className="view-toggle">
                       <button
-                        className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
-                        onClick={() => setViewMode('grid')}
-                        title="Grid View"
-                      >
-                        ⊞
-                      </button>
-                      <button
                         className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
                         onClick={() => setViewMode('list')}
                         title="List View"
                       >
                         ☰
+                      </button>
+                      <button
+                        className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                        onClick={() => setViewMode('grid')}
+                        title="Grid View"
+                      >
+                        ⊞
                       </button>
                     </div>
                     <div className="library-count">
@@ -939,7 +957,7 @@ function Library() {
               const hasItemsInTab = tabLibrary.length > 0
               
               // Check if filters are active
-              const hasActiveFilters = filterRating !== 'all' || filterYear !== 'all' || filterDateRange !== 'all'
+              const hasActiveFilters = filterRating !== 'all' || filterYear !== 'all' || filterDateRange !== 'all' || filterWantToWatch !== 'all'
               
               if (currentLibrary.length > 0) {
                 // Show items

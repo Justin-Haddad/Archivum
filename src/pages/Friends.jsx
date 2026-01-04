@@ -377,7 +377,7 @@ function Friends() {
 
       <div className="page-content">
         {/* Tabs */}
-        <div className="library-tabs">
+        <div className="library-tabs friends-page-tabs">
           {tabs.map((tab) => (
             <button
               key={tab.key}
