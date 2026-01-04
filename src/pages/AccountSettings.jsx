@@ -1,5 +1,6 @@
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import Header from '../components/Header'
 import '../App.css'
 
 function AccountSettings() {
@@ -13,10 +14,8 @@ function AccountSettings() {
 
   return (
     <div className="page-container">
+      <Header />
       <div className="page-header">
-        <button className="back-btn" onClick={() => navigate('/')}>
-          ← Back to Home
-        </button>
         <h1 className="page-title">Account Settings</h1>
         <p className="page-subtitle">Manage your account security and email</p>
       </div>

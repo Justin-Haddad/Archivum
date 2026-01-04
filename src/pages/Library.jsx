@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useLibrary } from '../contexts/LibraryContext'
 import { searchMedia, getRecommendations } from '../lib/api'
+import Header from '../components/Header'
 import toast from 'react-hot-toast'
 import '../App.css'
 
@@ -352,7 +353,10 @@ function Library() {
   // Handle add to library - show rating modal first
   const handleAddToLibrary = (mediaItem) => {
     if (!user) {
-      toast.error('Please sign in to add items to your library')
+      toast.error('Please sign in or sign up to add items to your library', {
+        duration: 5000,
+        icon: '🔒',
+      })
       navigate('/')
       return
     }
@@ -686,13 +690,33 @@ function Library() {
           </div>
         </div>
       )}
-      <div className="page-header">
-        <button className="back-btn" onClick={() => navigate('/')}>
-          ← Back to Home
-        </button>
-        <h1 className="page-title">My Archive</h1>
-        <p className="page-subtitle">Your personal collection of movies, TV shows, books, and games</p>
-      </div>
+
+      {!user ? (
+        <div className="page-container">
+          <Header />
+          <div className="page-header">
+            <h1 className="page-title">My Archive</h1>
+          </div>
+          <div className="page-content" style={{ textAlign: 'center', padding: 'var(--space-5xl)' }}>
+            <div className="auth-prompt">
+              <div className="auth-prompt-icon">🔒</div>
+              <h2 className="auth-prompt-title">Sign In Required</h2>
+              <p className="auth-prompt-message">
+                Please sign in or sign up to view and manage your media archive
+              </p>
+              <button className="btn-primary" onClick={() => navigate('/')}>
+                Go to Sign In
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <Header />
+          <div className="page-header">
+            <h1 className="page-title">My Archive</h1>
+            <p className="page-subtitle">Your personal collection of movies, TV shows, books, and games</p>
+          </div>
 
       <div className="page-content">
         {/* Tabs */}
@@ -970,8 +994,9 @@ function Library() {
             })()}
           </div>
         )}
-
       </div>
+      </>
+      )}
     </div>
   )
 }

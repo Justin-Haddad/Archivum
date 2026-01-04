@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getMovieDetails, getTVShowDetails, getBookDetails, getGameDetails } from '../lib/api'
 import { useLibrary } from '../contexts/LibraryContext'
 import { useAuth } from '../contexts/AuthContext'
+import Header from '../components/Header'
 import toast from 'react-hot-toast'
 import '../App.css'
 
@@ -109,7 +110,11 @@ function MediaDetail() {
 
   const handleAddToLibrary = () => {
     if (!user) {
-      toast.error('Please sign in to add items to your library')
+      toast.error('Please sign in or sign up to add items to your library', {
+        duration: 5000,
+        icon: '🔒',
+      })
+      navigate('/')
       return
     }
 
@@ -204,10 +209,8 @@ function MediaDetail() {
   if (loading) {
     return (
       <div className="page-container" style={{ minHeight: '100vh', background: 'var(--color-off-white)' }}>
+        <Header />
         <div className="page-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
         </div>
         <div className="page-content" style={{ textAlign: 'center', padding: 'var(--space-5xl)' }}>
           <div className="loading-spinner" style={{ fontSize: '1.5rem', color: 'var(--color-black)' }}>
@@ -224,10 +227,8 @@ function MediaDetail() {
   if (error && !loading) {
     return (
       <div className="page-container">
+        <Header />
         <div className="page-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
           <h1 className="page-title">Error</h1>
         </div>
         <div className="page-content" style={{ textAlign: 'center', padding: 'var(--space-5xl)' }}>
@@ -248,10 +249,8 @@ function MediaDetail() {
   if (!details && !loading) {
     return (
       <div className="page-container">
+        <Header />
         <div className="page-header">
-          <button className="back-btn" onClick={() => navigate(-1)}>
-            ← Back
-          </button>
           <h1 className="page-title">Not Found</h1>
         </div>
         <div className="page-content" style={{ textAlign: 'center', padding: 'var(--space-5xl)' }}>

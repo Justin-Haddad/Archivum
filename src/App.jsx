@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
+import Header from './components/Header'
 import './App.css'
 
 function App() {
@@ -177,9 +178,6 @@ function App() {
     }
   }
 
-  const handleSignOut = async () => {
-    await signOut()
-  }
 
   const openAuthModal = () => {
     setAuthMode('login') // Always reset to login when opening
@@ -201,106 +199,7 @@ function App() {
   return (
     <div className="app">
       {/* Header - Top Navigation */}
-      <header className="header">
-        <div className="container">
-          <div className="logo">
-            <span className="logo-text">Archivum</span>
-          </div>
-          <nav className="nav">
-            <a href="#home" className="nav-link" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Home</a>
-            <a href="#discover" className="nav-link" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>Discover</a>
-            <a href="/library" className="nav-link" onClick={(e) => { e.preventDefault(); navigate('/library'); }}>My Archive</a>
-            <a href="#friends" className="nav-link">Friends</a>
-            {user ? (
-              <div className="user-menu">
-                <button 
-                  className="username-btn" 
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                >
-                  {user.user_metadata?.username || user.email}
-                  <span className="dropdown-arrow">▼</span>
-                </button>
-                
-                {/* Profile Dropdown Menu */}
-                {showProfileMenu && (
-                  <div className="profile-dropdown">
-                    <div className="profile-header">
-                      <div className="profile-avatar">
-                        {user.user_metadata?.avatar_url ? (
-                          <>
-                            <img 
-                              src={user.user_metadata.avatar_url} 
-                              alt="Profile" 
-                              className="profile-avatar-image"
-                              onError={(e) => {
-                                e.target.style.display = 'none'
-                              }}
-                            />
-                            <div className="profile-avatar-initial">
-                              {(user.user_metadata?.username || user.email).charAt(0).toUpperCase()}
-                            </div>
-                          </>
-                        ) : (
-                          <div className="profile-avatar-initial">
-                            {(user.user_metadata?.username || user.email).charAt(0).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="profile-info">
-                        <div className="profile-username">{user.user_metadata?.username || 'User'}</div>
-                        <div className="profile-email">{user.email}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="profile-divider"></div>
-                    
-                    <div className="profile-menu">
-                      <button 
-                        className="profile-menu-item" 
-                        onClick={() => {
-                          navigate('/profile')
-                          setShowProfileMenu(false)
-                        }}
-                      >
-                        <span className="menu-icon">👤</span>
-                        View Profile
-                      </button>
-                      <button 
-                        className="profile-menu-item" 
-                        onClick={() => {
-                          navigate('/account-settings')
-                          setShowProfileMenu(false)
-                        }}
-                      >
-                        <span className="menu-icon">⚙️</span>
-                        Account Settings
-                      </button>
-                    </div>
-                    
-                    <div className="profile-divider"></div>
-                    
-                    <button 
-                      className="profile-menu-item sign-out-item" 
-                      onClick={() => {
-                        handleSignOut()
-                        setShowProfileMenu(false)
-                      }}
-                    >
-                      <span className="menu-icon">🚪</span>
-                      Sign Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <>
-                <button className="btn-secondary" onClick={openAuthModal}>Sign in</button>
-                <button className="btn-primary" onClick={() => { setAuthMode('signup'); setShowAuthModal(true); }}>Sign up</button>
-              </>
-            )}
-          </nav>
-        </div>
-      </header>
+      <Header onSignInClick={openAuthModal} onSignUpClick={() => { setAuthMode('signup'); setShowAuthModal(true); }} />
 
       {/* Auth Modal */}
       {showAuthModal && (
