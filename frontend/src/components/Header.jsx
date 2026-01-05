@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import '../App.css'
@@ -8,6 +8,8 @@ function Header({ onSignInClick, onSignUpClick }) {
   const location = useLocation()
   const { user, signOut } = useAuth()
   const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showDiscoverMenu, setShowDiscoverMenu] = useState(false)
+  const discoverMenuRef = useRef(null)
 
   const handleSignOut = async () => {
     await signOut()
@@ -23,27 +25,22 @@ function Header({ onSignInClick, onSignUpClick }) {
     }
   }
 
-  const handleDiscoverClick = (e) => {
-    e.preventDefault()
-    if (location.pathname === '/') {
-      // Scroll to discover section on home page
-      const discoverSection = document.getElementById('discover')
-      if (discoverSection) {
-        discoverSection.scrollIntoView({ behavior: 'smooth' })
-      } else {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
+  // Close discover menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (discoverMenuRef.current && !discoverMenuRef.current.contains(event.target)) {
+        setShowDiscoverMenu(false)
       }
-    } else {
-      navigate('/#discover')
-      // Wait for navigation then scroll
-      setTimeout(() => {
-        const discoverSection = document.getElementById('discover')
-        if (discoverSection) {
-          discoverSection.scrollIntoView({ behavior: 'smooth' })
-        }
-      }, 100)
     }
-  }
+
+    if (showDiscoverMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showDiscoverMenu])
 
   return (
     <header className="header">
@@ -59,13 +56,46 @@ function Header({ onSignInClick, onSignUpClick }) {
           >
             Home
           </a>
-          <a 
-            href="#discover" 
-            className="nav-link" 
-            onClick={handleDiscoverClick}
+          <div 
+            ref={discoverMenuRef}
+            className="nav-link-dropdown"
           >
-            Discover
-          </a>
+            <a 
+              href="/discover/trending" 
+              className="nav-link" 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                setShowDiscoverMenu(!showDiscoverMenu);
+              }}
+            >
+              Discover
+            </a>
+            {showDiscoverMenu && (
+              <div className="nav-dropdown-menu">
+                <a 
+                  href="/discover/trending" 
+                  className="nav-dropdown-item"
+                  onClick={(e) => { e.preventDefault(); navigate('/discover/trending'); setShowDiscoverMenu(false); }}
+                >
+                  Trending Now
+                </a>
+                <a 
+                  href="/discover/recommended" 
+                  className="nav-dropdown-item"
+                  onClick={(e) => { e.preventDefault(); navigate('/discover/recommended'); setShowDiscoverMenu(false); }}
+                >
+                  Recommended for You
+                </a>
+                <a 
+                  href="/discover/new-releases" 
+                  className="nav-dropdown-item"
+                  onClick={(e) => { e.preventDefault(); navigate('/discover/new-releases'); setShowDiscoverMenu(false); }}
+                >
+                  New Releases
+                </a>
+              </div>
+            )}
+          </div>
           <a 
             href="/library" 
             className="nav-link" 

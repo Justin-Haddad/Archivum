@@ -9,6 +9,9 @@ import AccountSettings from './pages/AccountSettings.jsx'
 import Library from './pages/Library.jsx'
 import MediaDetail from './pages/MediaDetail.jsx'
 import Friends from './pages/Friends.jsx'
+import DiscoverTrending from './pages/DiscoverTrending.jsx'
+import DiscoverRecommended from './pages/DiscoverRecommended.jsx'
+import DiscoverNewReleases from './pages/DiscoverNewReleases.jsx'
 import { AuthProvider } from './contexts/AuthContext'
 import { LibraryProvider } from './contexts/LibraryContext'
 
@@ -21,9 +24,12 @@ createRoot(document.getElementById('root')).render(
           <Route path="/" element={<App />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/account-settings" element={<AccountSettings />} />
-            <Route path="/library" element={<Library />} />
-            <Route path="/friends" element={<Friends />} />
-            <Route path="/media/:mediaType/:mediaId" element={<MediaDetail />} />
+          <Route path="/library" element={<Library />} />
+          <Route path="/discover/trending" element={<DiscoverTrending />} />
+          <Route path="/discover/recommended" element={<DiscoverRecommended />} />
+          <Route path="/discover/new-releases" element={<DiscoverNewReleases />} />
+          <Route path="/friends" element={<Friends />} />
+          <Route path="/media/:mediaType/:mediaId" element={<MediaDetail />} />
         </Routes>
       </BrowserRouter>
         <Toaster position="top-center" />

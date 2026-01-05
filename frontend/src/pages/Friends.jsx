@@ -425,7 +425,6 @@ function Friends() {
         {/* Friends List */}
         {activeTab === 'friends' && (
           <div className="library-section">
-            <h2 className="section-title">My Friends</h2>
             {loading ? (
               <div style={{ textAlign: 'center', padding: 'var(--space-4xl)' }}>
                 <p>Loading friends...</p>
@@ -471,7 +470,6 @@ function Friends() {
         {/* Friend Requests */}
         {activeTab === 'requests' && (
           <div className="library-section">
-            <h2 className="section-title">Received Requests</h2>
             {friendRequests.length === 0 ? (
               <div className="empty-library">
                 <div className="empty-icon">📨</div>

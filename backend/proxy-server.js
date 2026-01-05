@@ -2,9 +2,11 @@
 // Run with: node proxy-server.js
 // Then update VITE_CORS_PROXY in .env to: http://localhost:3001/proxy?url=
 
-const express = require('express');
-const cors = require('cors');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 const PORT = 3001;

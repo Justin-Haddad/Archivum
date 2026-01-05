@@ -356,7 +356,7 @@ export const getTrendingMovies = async () => {
     }
     
     const data = await response.json()
-    return (data.results || []).slice(0, 10).map(movie => ({
+    return (data.results || []).slice(0, 20).map(movie => ({
       media_type: 'movie',
       media_id: movie.id.toString(),
       title: movie.title,
@@ -367,6 +367,45 @@ export const getTrendingMovies = async () => {
     }))
   } catch (error) {
     console.error('Error fetching trending movies:', error)
+    return []
+  }
+}
+
+// Get Trending TV Shows
+export const getTrendingTVShows = async () => {
+  if (!TMDB_API_KEY) {
+    console.warn('TMDB API key not set')
+    return []
+  }
+
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/trending/tv/day`,
+      {
+        headers: {
+          'Authorization': `Bearer ${TMDB_API_KEY}`,
+          'accept': 'application/json',
+        }
+      }
+    )
+    
+    if (!response.ok) {
+      console.error('TMDB API Error:', response.status)
+      return []
+    }
+    
+    const data = await response.json()
+    return (data.results || []).slice(0, 20).map(show => ({
+      media_type: 'tv_show',
+      media_id: show.id.toString(),
+      title: show.name,
+      year: show.first_air_date ? new Date(show.first_air_date).getFullYear() : null,
+      poster_url: getTMDBImageUrl(show.poster_path),
+      overview: show.overview,
+      rating: show.vote_average,
+    }))
+  } catch (error) {
+    console.error('Error fetching trending TV shows:', error)
     return []
   }
 }
@@ -395,7 +434,7 @@ export const getPopularTVShows = async () => {
     }
     
     const data = await response.json()
-    return (data.results || []).slice(0, 10).map(show => ({
+    return (data.results || []).slice(0, 20).map(show => ({
       media_type: 'tv_show',
       media_id: show.id.toString(),
       title: show.name,
@@ -406,6 +445,45 @@ export const getPopularTVShows = async () => {
     }))
   } catch (error) {
     console.error('Error fetching popular TV shows:', error)
+    return []
+  }
+}
+
+// Get Popular Movies
+export const getPopularMovies = async () => {
+  if (!TMDB_API_KEY) {
+    console.warn('TMDB API key not set')
+    return []
+  }
+
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/movie/popular`,
+      {
+        headers: {
+          'Authorization': `Bearer ${TMDB_API_KEY}`,
+          'accept': 'application/json',
+        }
+      }
+    )
+    
+    if (!response.ok) {
+      console.error('TMDB API Error:', response.status)
+      return []
+    }
+    
+    const data = await response.json()
+    return (data.results || []).slice(0, 20).map(movie => ({
+      media_type: 'movie',
+      media_id: movie.id.toString(),
+      title: movie.title,
+      year: movie.release_date ? new Date(movie.release_date).getFullYear() : null,
+      poster_url: getTMDBImageUrl(movie.poster_path),
+      overview: movie.overview,
+      rating: movie.vote_average,
+    }))
+  } catch (error) {
+    console.error('Error fetching popular movies:', error)
     return []
   }
 }

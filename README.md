@@ -1,16 +1,70 @@
-# React + Vite
+# Archivum
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A media tracking and archive management application.
 
-Currently, two official plugins are available:
+## Project Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```
+.
+├── frontend/          # React/Vite frontend application
+│   ├── src/          # React components, pages, contexts
+│   ├── public/       # Static assets
+│   └── package.json  # Frontend dependencies
+│
+├── backend/          # Backend server (CORS proxy)
+│   ├── proxy-server.js
+│   └── package.json  # Backend dependencies
+│
+└── package.json      # Root package.json with workspace scripts
+```
 
-## React Compiler
+## Setup
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+### Install Dependencies
 
-## Expanding the ESLint configuration
+From the root directory:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+npm run install:all
+```
+
+Or install individually:
+
+```bash
+cd frontend && npm install
+cd ../backend && npm install
+```
+
+### Environment Variables
+
+Create `.env` files in both `frontend/` and `backend/` directories with the necessary environment variables.
+
+### Development
+
+**Frontend:**
+```bash
+npm run dev:frontend
+# or
+cd frontend && npm run dev
+```
+
+**Backend:**
+```bash
+npm run dev:backend
+# or
+cd backend && npm run dev
+```
+
+### Building
+
+Build the frontend:
+
+```bash
+npm run build:frontend
+# or
+cd frontend && npm run build
+```
+
+## Documentation
+
+See the various `.md` files in the root directory for setup guides and documentation.
