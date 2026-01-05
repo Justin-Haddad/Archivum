@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useLibrary } from '../contexts/LibraryContext'
-import { searchMedia, getRecommendations } from '../lib/api'
+import { getRecommendations } from '../lib/api'
 import Header from '../components/Header'
 import toast from 'react-hot-toast'
 import '../App.css'
@@ -296,66 +296,39 @@ function Library() {
     navigate(`/media/${recommendation.media_type}/${recommendation.media_id}`)
   }
 
-  // Handle search
-  const handleSearch = async (e) => {
+  // Handle search - only search within the library
+  const handleSearch = (e) => {
     e.preventDefault()
     if (!searchQuery.trim()) {
-      toast.error('Please enter a search query')
+      setShowSearch(false)
+      setShowRecommendations(true)
       return
     }
-
-    // If "All" tab is selected, search across all media types
-    if (activeTab === 'all') {
-      setSearching(true)
-      setShowSearch(true)
-      setShowRecommendations(false)
-      
-      try {
-        // Search all media types and combine results
-        const [movies, tvShows, books, games] = await Promise.all([
-          searchMedia(searchQuery, 'movie'),
-          searchMedia(searchQuery, 'tv_show'),
-          searchMedia(searchQuery, 'book'),
-          searchMedia(searchQuery, 'game')
-        ])
-        
-        const allResults = [...movies, ...tvShows, ...books, ...games]
-        setSearchResults(allResults)
-        
-        if (allResults.length === 0) {
-          toast.error('No results found. Try a different search term.')
-        }
-      } catch (error) {
-        console.error('Search error:', error)
-        const errorMessage = error.message || 'Error searching. Please try again.'
-        toast.error(errorMessage)
-        setSearchResults([])
-      } finally {
-        setSearching(false)
-      }
-      return
-    }
-
-    const currentType = mediaTypes[activeTab]?.type
-    if (!currentType) return
 
     setSearching(true)
     setShowSearch(true)
     setShowRecommendations(false)
-    
-    try {
-      const results = await searchMedia(searchQuery, currentType)
-      setSearchResults(results)
-      if (results.length === 0) {
-        toast.error('No results found. Try a different search term.')
-      }
-    } catch (error) {
-      console.error('Search error:', error)
-      const errorMessage = error.message || 'Error searching. Please try again.'
-      toast.error(errorMessage)
-      setSearchResults([])
-    } finally {
-      setSearching(false)
+
+    // Filter library items based on search query
+    const query = searchQuery.toLowerCase().trim()
+    let filtered = library
+
+    // Filter by active tab
+    if (activeTab !== 'all') {
+      const currentType = mediaTypes[activeTab]?.type
+      filtered = filtered.filter(item => item.media_type === currentType)
+    }
+
+    // Filter by search query (search in title)
+    filtered = filtered.filter(item => 
+      item.title && item.title.toLowerCase().includes(query)
+    )
+
+    setSearchResults(filtered)
+    setSearching(false)
+
+    if (filtered.length === 0) {
+      // Don't show error, just show empty state
     }
   }
 
@@ -759,13 +732,19 @@ function Library() {
               <input
                 type="text"
                 className="search-input"
-                placeholder={activeTab === 'all' ? 'Search all media...' : `Search for ${mediaTypes[activeTab]?.label.toLowerCase()}...`}
+                placeholder={activeTab === 'all' ? 'Search your archive...' : `Search your ${mediaTypes[activeTab]?.label.toLowerCase()}...`}
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value)
                   if (e.target.value === '') {
                     setShowSearch(false)
                     setShowRecommendations(true)
+                  } else {
+                    // Auto-search as user types
+                    const fakeEvent = {
+                      preventDefault: () => {}
+                    }
+                    handleSearch(fakeEvent)
                   }
                 }}
                 onFocus={() => {
@@ -783,20 +762,43 @@ function Library() {
               </button>
             </div>
           </form>
-
+          <div style={{ marginTop: 'var(--space-md)', textAlign: 'center' }}>
+            <button 
+              className="btn-secondary"
+              onClick={() => navigate('/discover/explore')}
+              style={{ fontSize: '0.9rem', padding: 'var(--space-sm) var(--space-md)' }}
+            >
+              🔍 Explore More Media
+            </button>
+          </div>
         </div>
 
         {/* Search Results */}
-        {showSearch && searchResults.length > 0 && (
+        {showSearch && searchQuery && (
           <div className="library-section">
             <h2 className="section-title">Search Results</h2>
-            {viewMode === 'grid' ? (
-              <div className="media-grid">
-                {searchResults.map(item => renderMediaCard(item, false))}
-              </div>
+            {searchResults.length > 0 ? (
+              viewMode === 'grid' ? (
+                <div className="media-grid">
+                  {searchResults.map(item => renderMediaCard(item, true))}
+                </div>
+              ) : (
+                <div className="media-list">
+                  {searchResults.map(item => renderMediaListItem(item, true))}
+                </div>
+              )
             ) : (
-              <div className="media-list">
-                {searchResults.map(item => renderMediaListItem(item, false))}
+              <div className="empty-library">
+                <div className="empty-icon">🔍</div>
+                <p className="empty-message">No results found in your archive</p>
+                <p className="empty-submessage">Try a different search term or explore more media to add to your collection</p>
+                <button 
+                  className="btn-primary"
+                  onClick={() => navigate('/discover/explore')}
+                  style={{ marginTop: 'var(--space-md)' }}
+                >
+                  Explore More Media
+                </button>
               </div>
             )}
           </div>

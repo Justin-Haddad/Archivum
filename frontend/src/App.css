@@ -169,25 +169,25 @@ p {
   top: calc(100% + var(--space-sm));
   left: 0;
   background: var(--color-white);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
-  min-width: 220px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  min-width: 160px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   z-index: 1000;
-  animation: fadeInUp 0.2s ease-out;
+  animation: fadeInUp 0.15s ease-out;
 }
 
 .nav-dropdown-item {
   display: block;
-  padding: var(--space-md) var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
   color: var(--color-gray-dark);
   text-decoration: none;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
   font-family: var(--font-sans);
   transition: all var(--transition-base);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .nav-dropdown-item:last-child {

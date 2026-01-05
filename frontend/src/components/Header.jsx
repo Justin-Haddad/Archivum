@@ -73,6 +73,13 @@ function Header({ onSignInClick, onSignUpClick }) {
             {showDiscoverMenu && (
               <div className="nav-dropdown-menu">
                 <a 
+                  href="/discover/explore" 
+                  className="nav-dropdown-item"
+                  onClick={(e) => { e.preventDefault(); navigate('/discover/explore'); setShowDiscoverMenu(false); }}
+                >
+                  Explore
+                </a>
+                <a 
                   href="/discover/trending" 
                   className="nav-dropdown-item"
                   onClick={(e) => { e.preventDefault(); navigate('/discover/trending'); setShowDiscoverMenu(false); }}
