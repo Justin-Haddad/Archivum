@@ -146,7 +146,7 @@ function DiscoverTrending() {
           </div>
           {item.rating && (
             <div className="discover-card-rating">
-              {item.rating.toFixed(1)}
+              ⭐ {item.rating.toFixed(1)}
             </div>
           )}
         </div>

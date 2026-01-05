@@ -428,7 +428,7 @@ function App() {
       {/* Use Cases Section */}
       <section className="use-cases-section" id="features">
         <div className="container">
-          <h2 className="section-title">Explore Archivum</h2>
+          <h2 className="section-title" style={{ textAlign: 'center' }}>Explore Archivum</h2>
           <div className="use-cases-grid">
             {useCases.map((useCase, index) => (
               <div key={index} className="use-case-card">
@@ -450,14 +450,22 @@ function App() {
       {/* Command Center / Your Library Section */}
       <section className="command-center-section">
         <div className="container">
-          <h2 className="section-title">Your command center for your media collection</h2>
+          <h2 className="section-title" style={{ textAlign: 'center' }}>Your command center for your media collection</h2>
           <div className="command-center-grid">
-            <div className="command-card">
+            <div 
+              className="command-card" 
+              onClick={() => navigate('/library')}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="command-icon">📚</div>
               <h3 className="command-title">Your Library</h3>
               <p className="command-desc">A central place to view all your movies, shows, books, and games in one organized collection.</p>
             </div>
-            <div className="command-card">
+            <div 
+              className="command-card"
+              onClick={() => navigate('/discover/trending')}
+              style={{ cursor: 'pointer' }}
+            >
               <div className="command-icon">🔔</div>
               <h3 className="command-title">Discover</h3>
               <p className="command-desc">Search and discover new media to add to your collection. Find your next favorite watch or read.</p>
@@ -467,52 +475,6 @@ function App() {
       </section>
 
 
-      {/* Stats Section - If User Logged In */}
-      {user && (
-        <section className="stats-section">
-          <div className="container">
-            <h2 className="section-title">Your Stats</h2>
-            <div className="stats-grid">
-              <div className="stat-card">
-                <div className="stat-number">{stats.moviesWatched}</div>
-                <div className="stat-label">Movies</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">{stats.showsWatched}</div>
-                <div className="stat-label">Shows</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">{stats.booksRead}</div>
-                <div className="stat-label">Books</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">{stats.gamesPlayed}</div>
-                <div className="stat-label">Games</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-number">{stats.totalHours}</div>
-                <div className="stat-label">Hours</div>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Features Section */}
-      <section className="features-section" id="features">
-        <div className="features-container">
-          <h2 className="section-title">Why Choose Archivum?</h2>
-          <div className="features-grid">
-            {features.map((feature, index) => (
-              <div key={index} className="feature-card">
-                <span className="feature-icon">{feature.icon}</span>
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-desc">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       </main>
 

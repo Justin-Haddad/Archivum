@@ -213,9 +213,10 @@ export const searchGames = async (query) => {
     throw error // Re-throw to show the actual error
   }
 
+  // Check if CORS proxy is configured (declare outside try block so it's available in catch)
+  const useProxy = CORS_PROXY && CORS_PROXY.trim() !== ''
+
   try {
-    // Check if CORS proxy is configured
-    const useProxy = CORS_PROXY && CORS_PROXY.trim() !== ''
     const targetUrl = `${IGDB_BASE_URL}/games`
     
     let apiUrl, fetchOptions
@@ -371,6 +372,44 @@ export const getTrendingMovies = async () => {
   }
 }
 
+export const getNowPlayingMovies = async () => {
+  if (!TMDB_API_KEY) {
+    console.warn('TMDB API key not set')
+    return []
+  }
+
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/movie/now_playing`,
+      {
+        headers: {
+          'Authorization': `Bearer ${TMDB_API_KEY}`,
+          'accept': 'application/json',
+        }
+      }
+    )
+    
+    if (!response.ok) {
+      console.error('TMDB API Error:', response.status)
+      return []
+    }
+    
+    const data = await response.json()
+    return (data.results || []).slice(0, 20).map(movie => ({
+      media_type: 'movie',
+      media_id: movie.id.toString(),
+      title: movie.title,
+      year: movie.release_date ? new Date(movie.release_date).getFullYear() : null,
+      poster_url: getTMDBImageUrl(movie.poster_path),
+      overview: movie.overview,
+      rating: movie.vote_average,
+    }))
+  } catch (error) {
+    console.error('Error fetching now playing movies:', error)
+    return []
+  }
+}
+
 // Get Trending TV Shows
 export const getTrendingTVShows = async () => {
   if (!TMDB_API_KEY) {
@@ -408,6 +447,44 @@ export const getTrendingTVShows = async () => {
     console.error('Error fetching trending TV shows:', error)
     return []
   }
+}
+
+export const getAiringTodayTVShows = async () => {
+  if (!TMDB_API_KEY) {
+    console.warn('TMDB API key not set')
+    return []
+  }
+
+  try {
+    const response = await fetch(
+      `${TMDB_BASE_URL}/tv/airing_today`,
+      {
+        headers: {
+          'Authorization': `Bearer ${TMDB_API_KEY}`,
+          'accept': 'application/json',
+        }
+      }
+    )
+    
+    if (!response.ok) {
+      console.error('TMDB API Error:', response.status)
+      return []
+    }
+    
+    const data = await response.json()
+    return (data.results || []).slice(0, 20).map(show => ({
+      media_type: 'tv_show',
+      media_id: show.id.toString(),
+      title: show.name,
+      year: show.first_air_date ? new Date(show.first_air_date).getFullYear() : null,
+      poster_url: getTMDBImageUrl(show.poster_path),
+      overview: show.overview,
+      rating: show.vote_average,
+    }))
+  } catch (error) {
+    console.error('Error fetching airing today TV shows:', error)
+    return []
+  } 
 }
 
 // Get Popular TV Shows
@@ -807,30 +884,90 @@ export const getTVShowDetails = async (tvId) => {
 
 // Get detailed game information (IGDB)
 export const getGameDetails = async (gameId) => {
+  console.log('getGameDetails called with gameId:', gameId, 'type:', typeof gameId)
+  
   const token = await getIGDBAccessToken()
   if (!token) {
     throw new Error('IGDB credentials not set. Please add VITE_IGDB_CLIENT_ID and VITE_IGDB_CLIENT_SECRET to your .env file')
   }
 
+  // Check if CORS proxy is configured (declare outside try block so it's available in catch)
+  const useProxy = CORS_PROXY && CORS_PROXY.trim() !== ''
+  console.log('getGameDetails - useProxy:', useProxy, 'CORS_PROXY:', CORS_PROXY)
+
   try {
     // Fetch game details with multiple related data
-    const gameQuery = `fields id,name,summary,first_release_date,cover,genres,platforms,rating,rating_count,aggregated_rating,aggregated_rating_count,storyline,websites,developers,publishers; where id = ${gameId};`
+    // Request cover.image_id to get the image ID directly
+    // Note: developers and publishers are accessed via involved_companies relationship
+    const gameQuery = `fields id,name,summary,first_release_date,cover.image_id,genres,platforms,rating,rating_count,aggregated_rating,aggregated_rating_count,storyline,websites,involved_companies; where id = ${gameId};`
     
-    const response = await fetch(`${IGDB_BASE_URL}/games`, {
-      method: 'POST',
-      headers: {
-        'Client-ID': IGDB_CLIENT_ID,
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'text/plain',
-      },
-      body: gameQuery,
-    })
+    const targetUrl = `${IGDB_BASE_URL}/games`
+    
+    let apiUrl, fetchOptions
+    
+    if (useProxy) {
+      // Use local proxy server
+      apiUrl = CORS_PROXY
+      fetchOptions = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          url: targetUrl,
+          method: 'POST',
+          headers: {
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'text/plain',
+          },
+          body: gameQuery,
+        }),
+      }
+    } else {
+      // Direct request (will fail due to CORS, but we'll catch it)
+      apiUrl = targetUrl
+      fetchOptions = {
+        method: 'POST',
+        headers: {
+          'Client-ID': IGDB_CLIENT_ID,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/plain',
+          'Accept': 'application/json',
+        },
+        body: gameQuery,
+      }
+    }
+    
+    console.log('Fetching game details from:', apiUrl, 'useProxy:', useProxy)
+    const response = await fetch(apiUrl, fetchOptions)
+    console.log('Game details response status:', response.status, response.ok)
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch game details: ${response.status}`)
+      const errorText = await response.text()
+      console.error('IGDB API Error:', response.status, errorText)
+      throw new Error(`Failed to fetch game details: ${response.status} - ${errorText}`)
     }
 
-    const games = await response.json()
+    // Handle response - proxy returns JSON with the data, direct returns array
+    let games
+    if (useProxy) {
+      const proxyResponse = await response.json()
+      // Proxy might return data in different formats
+      if (Array.isArray(proxyResponse)) {
+        games = proxyResponse
+      } else if (proxyResponse.data && Array.isArray(proxyResponse.data)) {
+        games = proxyResponse.data
+      } else if (proxyResponse.contents) {
+        games = typeof proxyResponse.contents === 'string' 
+          ? JSON.parse(proxyResponse.contents) 
+          : proxyResponse.contents
+      } else {
+        games = proxyResponse
+      }
+    } else {
+      games = await response.json()
+    }
     
     if (!games || games.length === 0) {
       throw new Error('Game not found')
@@ -838,10 +975,22 @@ export const getGameDetails = async (gameId) => {
 
     const game = games[0]
 
-    // Get cover image URL
-    const coverUrl = game.cover 
-      ? `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg`
-      : null
+    // Get cover image URL - handle both object and number formats
+    let coverUrl = null
+    if (game.cover) {
+      if (typeof game.cover === 'number') {
+        // Cover is just an ID number
+        coverUrl = `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover}.jpg`
+      } else if (game.cover.image_id) {
+        // Cover is an object with image_id
+        coverUrl = `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg`
+      } else if (typeof game.cover === 'object' && Object.keys(game.cover).length === 0) {
+        // Empty cover object
+        coverUrl = null
+      }
+    }
+    
+    console.log('Game cover data:', game.cover, 'Cover URL:', coverUrl)
 
     // Fetch genre names if genres exist
     let genreNames = []
@@ -849,17 +998,56 @@ export const getGameDetails = async (gameId) => {
       try {
         const genreIds = game.genres.join(',')
         const genreQuery = `fields name; where id = (${genreIds});`
-        const genreResponse = await fetch(`${IGDB_BASE_URL}/genres`, {
-          method: 'POST',
-          headers: {
-            'Client-ID': IGDB_CLIENT_ID,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'text/plain',
-          },
-          body: genreQuery,
-        })
+        const genreTargetUrl = `${IGDB_BASE_URL}/genres`
+        
+        let genreApiUrl, genreFetchOptions
+        if (useProxy) {
+          genreApiUrl = CORS_PROXY
+          genreFetchOptions = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: genreTargetUrl,
+              method: 'POST',
+              headers: {
+                'Client-ID': IGDB_CLIENT_ID,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'text/plain',
+              },
+              body: genreQuery,
+            }),
+          }
+        } else {
+          genreApiUrl = genreTargetUrl
+          genreFetchOptions = {
+            method: 'POST',
+            headers: {
+              'Client-ID': IGDB_CLIENT_ID,
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'text/plain',
+              'Accept': 'application/json',
+            },
+            body: genreQuery,
+          }
+        }
+        
+        const genreResponse = await fetch(genreApiUrl, genreFetchOptions)
         if (genreResponse.ok) {
-          const genres = await genreResponse.json()
+          let genres
+          if (useProxy) {
+            const proxyResponse = await genreResponse.json()
+            if (Array.isArray(proxyResponse)) {
+              genres = proxyResponse
+            } else if (proxyResponse.data && Array.isArray(proxyResponse.data)) {
+              genres = proxyResponse.data
+            } else {
+              genres = proxyResponse
+            }
+          } else {
+            genres = await genreResponse.json()
+          }
           genreNames = genres.map(g => ({ id: g.id, name: g.name }))
         }
       } catch (err) {
@@ -873,17 +1061,56 @@ export const getGameDetails = async (gameId) => {
       try {
         const platformIds = game.platforms.join(',')
         const platformQuery = `fields name,abbreviation; where id = (${platformIds});`
-        const platformResponse = await fetch(`${IGDB_BASE_URL}/platforms`, {
-          method: 'POST',
-          headers: {
-            'Client-ID': IGDB_CLIENT_ID,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'text/plain',
-          },
-          body: platformQuery,
-        })
+        const platformTargetUrl = `${IGDB_BASE_URL}/platforms`
+        
+        let platformApiUrl, platformFetchOptions
+        if (useProxy) {
+          platformApiUrl = CORS_PROXY
+          platformFetchOptions = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: platformTargetUrl,
+              method: 'POST',
+              headers: {
+                'Client-ID': IGDB_CLIENT_ID,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'text/plain',
+              },
+              body: platformQuery,
+            }),
+          }
+        } else {
+          platformApiUrl = platformTargetUrl
+          platformFetchOptions = {
+            method: 'POST',
+            headers: {
+              'Client-ID': IGDB_CLIENT_ID,
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'text/plain',
+              'Accept': 'application/json',
+            },
+            body: platformQuery,
+          }
+        }
+        
+        const platformResponse = await fetch(platformApiUrl, platformFetchOptions)
         if (platformResponse.ok) {
-          const platforms = await platformResponse.json()
+          let platforms
+          if (useProxy) {
+            const proxyResponse = await platformResponse.json()
+            if (Array.isArray(proxyResponse)) {
+              platforms = proxyResponse
+            } else if (proxyResponse.data && Array.isArray(proxyResponse.data)) {
+              platforms = proxyResponse.data
+            } else {
+              platforms = proxyResponse
+            }
+          } else {
+            platforms = await platformResponse.json()
+          }
           platformNames = platforms.map(p => ({ id: p.id, name: p.name, abbreviation: p.abbreviation }))
         }
       } catch (err) {
@@ -891,51 +1118,97 @@ export const getGameDetails = async (gameId) => {
       }
     }
 
-    // Fetch developer names if developers exist
+    // Extract developers and publishers from involved_companies
     let developerNames = []
-    if (game.developers && game.developers.length > 0) {
-      try {
-        const developerIds = game.developers.join(',')
-        const developerQuery = `fields name; where id = (${developerIds});`
-        const developerResponse = await fetch(`${IGDB_BASE_URL}/companies`, {
-          method: 'POST',
-          headers: {
-            'Client-ID': IGDB_CLIENT_ID,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'text/plain',
-          },
-          body: developerQuery,
-        })
-        if (developerResponse.ok) {
-          const developers = await developerResponse.json()
-          developerNames = developers.map(d => d.name)
-        }
-      } catch (err) {
-        console.warn('Error fetching developers:', err)
-      }
-    }
-
-    // Fetch publisher names if publishers exist
     let publisherNames = []
-    if (game.publishers && game.publishers.length > 0) {
+    if (game.involved_companies && game.involved_companies.length > 0) {
       try {
-        const publisherIds = game.publishers.join(',')
-        const publisherQuery = `fields name; where id = (${publisherIds});`
-        const publisherResponse = await fetch(`${IGDB_BASE_URL}/companies`, {
-          method: 'POST',
-          headers: {
-            'Client-ID': IGDB_CLIENT_ID,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'text/plain',
-          },
-          body: publisherQuery,
-        })
-        if (publisherResponse.ok) {
-          const publishers = await publisherResponse.json()
-          publisherNames = publishers.map(p => p.name)
+        // Get company IDs from involved_companies
+        const companyIds = game.involved_companies
+          .map(ic => ic.company)
+          .filter(id => id !== undefined && id !== null)
+          .join(',')
+        
+        if (companyIds) {
+          // Fetch company details
+          const companyQuery = `fields name; where id = (${companyIds});`
+          const companyTargetUrl = `${IGDB_BASE_URL}/companies`
+          
+          let companyApiUrl, companyFetchOptions
+          if (useProxy) {
+            companyApiUrl = CORS_PROXY
+            companyFetchOptions = {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                url: companyTargetUrl,
+                method: 'POST',
+                headers: {
+                  'Client-ID': IGDB_CLIENT_ID,
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'text/plain',
+                },
+                body: companyQuery,
+              }),
+            }
+          } else {
+            companyApiUrl = companyTargetUrl
+            companyFetchOptions = {
+              method: 'POST',
+              headers: {
+                'Client-ID': IGDB_CLIENT_ID,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'text/plain',
+                'Accept': 'application/json',
+              },
+              body: companyQuery,
+            }
+          }
+          
+          const companyResponse = await fetch(companyApiUrl, companyFetchOptions)
+          if (companyResponse.ok) {
+            let companies
+            if (useProxy) {
+              const proxyResponse = await companyResponse.json()
+              if (Array.isArray(proxyResponse)) {
+                companies = proxyResponse
+              } else if (proxyResponse.data && Array.isArray(proxyResponse.data)) {
+                companies = proxyResponse.data
+              } else {
+                companies = proxyResponse
+              }
+            } else {
+              companies = await companyResponse.json()
+            }
+            
+            // Create a map of company ID to name
+            const companyMap = {}
+            companies.forEach(c => {
+              companyMap[c.id] = c.name
+            })
+            
+            // Separate developers and publishers based on involved_companies flags
+            game.involved_companies.forEach(ic => {
+              const companyName = companyMap[ic.company]
+              if (companyName) {
+                if (ic.developer) {
+                  developerNames.push(companyName)
+                }
+                if (ic.publisher) {
+                  publisherNames.push(companyName)
+                }
+              }
+            })
+            
+            // Remove duplicates
+            developerNames = [...new Set(developerNames)]
+            publisherNames = [...new Set(publisherNames)]
+          }
         }
       } catch (err) {
-        console.warn('Error fetching publishers:', err)
+        console.warn('Error fetching companies (developers/publishers):', err)
       }
     }
 
@@ -945,17 +1218,56 @@ export const getGameDetails = async (gameId) => {
       try {
         const websiteIds = game.websites.join(',')
         const websiteQuery = `fields category,url; where id = (${websiteIds});`
-        const websiteResponse = await fetch(`${IGDB_BASE_URL}/websites`, {
-          method: 'POST',
-          headers: {
-            'Client-ID': IGDB_CLIENT_ID,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'text/plain',
-          },
-          body: websiteQuery,
-        })
+        const websiteTargetUrl = `${IGDB_BASE_URL}/websites`
+        
+        let websiteApiUrl, websiteFetchOptions
+        if (useProxy) {
+          websiteApiUrl = CORS_PROXY
+          websiteFetchOptions = {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              url: websiteTargetUrl,
+              method: 'POST',
+              headers: {
+                'Client-ID': IGDB_CLIENT_ID,
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'text/plain',
+              },
+              body: websiteQuery,
+            }),
+          }
+        } else {
+          websiteApiUrl = websiteTargetUrl
+          websiteFetchOptions = {
+            method: 'POST',
+            headers: {
+              'Client-ID': IGDB_CLIENT_ID,
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'text/plain',
+              'Accept': 'application/json',
+            },
+            body: websiteQuery,
+          }
+        }
+        
+        const websiteResponse = await fetch(websiteApiUrl, websiteFetchOptions)
         if (websiteResponse.ok) {
-          const websites = await websiteResponse.json()
+          let websites
+          if (useProxy) {
+            const proxyResponse = await websiteResponse.json()
+            if (Array.isArray(proxyResponse)) {
+              websites = proxyResponse
+            } else if (proxyResponse.data && Array.isArray(proxyResponse.data)) {
+              websites = proxyResponse.data
+            } else {
+              websites = proxyResponse
+            }
+          } else {
+            websites = await websiteResponse.json()
+          }
           websites.forEach(ws => {
             // Category 1 = official, 2 = wikia, 3 = wikipedia, 4 = facebook, etc.
             if (ws.category === 1) {
@@ -970,7 +1282,7 @@ export const getGameDetails = async (gameId) => {
       }
     }
 
-    return {
+    const gameDetails = {
       id: game.id,
       title: game.name,
       year: game.first_release_date 
@@ -993,9 +1305,28 @@ export const getGameDetails = async (gameId) => {
       websiteUrls: websiteUrls,
       media_type: 'game'
     }
+    
+    console.log('Returning game details:', gameDetails)
+    return gameDetails
   } catch (error) {
     console.error('Error fetching game details:', error)
-    throw error
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      useProxy: useProxy,
+      corsProxy: CORS_PROXY
+    })
+    
+    // Check if it's a network/CORS error
+    if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError') || error.name === 'TypeError' || error.message.includes('ECONNREFUSED'))) {
+      if (useProxy) {
+        throw new Error(`Failed to connect to proxy server at ${CORS_PROXY}. Make sure the proxy server is running (cd backend && npm run dev) and the URL is correct. Error: ${error.message}`)
+      } else {
+        throw new Error('IGDB API is not accessible from the browser due to CORS restrictions. Please set up a backend proxy or use a CORS proxy service.')
+      }
+    }
+    throw error // Re-throw to let the caller handle it
   }
 }
 

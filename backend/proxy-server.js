@@ -22,14 +22,28 @@ app.post('/proxy', async (req, res) => {
       return res.status(400).json({ error: 'URL is required' });
     }
 
+    console.log('Proxy request:', { url, method, headers: Object.keys(headers) });
+
     const response = await fetch(url, {
       method,
       headers,
       body,
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Proxy fetch error:', response.status, errorText);
+      return res.status(response.status).json({ error: errorText });
+    }
+
     const data = await response.text();
-    const jsonData = JSON.parse(data);
+    let jsonData;
+    try {
+      jsonData = JSON.parse(data);
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'Data:', data.substring(0, 200));
+      return res.status(500).json({ error: 'Failed to parse response as JSON' });
+    }
     
     res.json(jsonData);
   } catch (error) {
