@@ -756,12 +756,74 @@ p {
   background: var(--color-white);
 }
 
-.use-cases-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-xl);
-  max-width: 1200px;
+/* Carousel Container */
+.use-cases-carousel {
+  position: relative;
+  max-width: 900px;
   margin: 0 auto;
+  overflow: visible;
+  border-radius: 20px;
+  user-select: none;
+}
+
+.use-cases-carousel-wrapper {
+  overflow: hidden;
+  border-radius: 20px;
+  width: 100%;
+}
+
+.use-cases-carousel-track {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+  width: 100%;
+}
+
+.use-case-slide {
+  min-width: 100%;
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-off-white);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.use-case-slide-image {
+  width: 100%;
+  height: 300px;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.1) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.use-case-image-placeholder {
+  font-size: 8rem;
+  opacity: 0.8;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.use-case-slide-content {
+  padding: var(--space-3xl);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
 
 .use-case-card {
@@ -780,6 +842,10 @@ p {
 
 .use-case-header {
   margin-bottom: var(--space-md);
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .use-case-title {
@@ -795,6 +861,7 @@ p {
   display: flex;
   gap: var(--space-xs);
   flex-wrap: wrap;
+  justify-content: center;
 }
 
 .use-case-tag {
@@ -826,6 +893,80 @@ p {
 
 .use-case-link:hover {
   color: var(--color-deep-teal);
+}
+
+/* Carousel Navigation */
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: var(--color-black);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  z-index: 10;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  user-select: none;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.carousel-arrow:hover {
+  background: var(--color-white);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  transform: translateY(-50%) scale(1.05);
+}
+
+.carousel-arrow:active {
+  transform: translateY(-50%) scale(0.98);
+}
+
+.carousel-arrow-left {
+  left: -70px;
+}
+
+.carousel-arrow-right {
+  right: -70px;
+}
+
+/* Carousel Dots */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+  position: relative;
+  z-index: 10;
+}
+
+.carousel-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  padding: 0;
+}
+
+.carousel-dot:hover {
+  background: rgba(0, 0, 0, 0.4);
+  transform: scale(1.2);
+}
+
+.carousel-dot.active {
+  background: var(--color-black);
+  width: 24px;
+  border-radius: 5px;
 }
 
 /* Command Center Section */
@@ -2278,8 +2419,26 @@ p {
     grid-template-columns: repeat(2, 1fr);
   }
   
-  .use-cases-grid {
-    grid-template-columns: 1fr;
+  .use-case-slide-image {
+    height: 250px;
+  }
+  
+  .use-case-image-placeholder {
+    font-size: 6rem;
+  }
+  
+  .carousel-arrow {
+    width: 48px;
+    height: 48px;
+    font-size: 2rem;
+  }
+  
+  .carousel-arrow-left {
+    left: -60px;
+  }
+  
+  .carousel-arrow-right {
+    right: -60px;
   }
   
   .command-center-grid {
@@ -2290,7 +2449,21 @@ p {
 @media (max-width: 768px) {
   .container {
     padding: 0 var(--space-md);
-}
+  }
+  
+  .carousel-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 1.75rem;
+  }
+  
+  .carousel-arrow-left {
+    left: -50px;
+  }
+  
+  .carousel-arrow-right {
+    right: -50px;
+  }
 
 .hero-title {
   font-size: 2.25rem;

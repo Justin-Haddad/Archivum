@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Header from './components/Header'
@@ -109,30 +109,87 @@ function App() {
 
   const useCases = [
     { 
-      title: 'Track Your Watchlist', 
+      title: 'Track Your Media', 
       desc: 'Build a comprehensive watchlist: track movies you want to see, shows you\'re watching, books you\'re reading, and games you\'re playing.',
-      tags: ['Movies', 'TV Shows'],
-      action: 'See it work'
+      tags: ['My Archive'],
+      action: 'See it work',
+      image: '🎬'
     },
     { 
       title: 'Rate & Review Everything', 
       desc: 'Rate your favorite media from 1-10 stars and leave personal notes. Build your personal rating system over time.',
       tags: ['All Media'],
-      action: 'See it work'
+      action: 'See it work',
+      image: '⭐'
     },
     { 
-      title: 'Discover What\'s Next', 
-      desc: 'Search millions of titles across movies, TV shows, books, and games. Find your next favorite based on what you love.',
+      title: 'Explore Endlessly', 
+      desc: 'Search millions of titles across movies, TV shows, books, and games.',
       tags: ['Discover'],
-      action: 'See it work'
+      action: 'See it work',
+      image: '🔍'
     },
     { 
       title: 'Build Your Collection', 
       desc: 'Organize your media into custom collections. Create shelves for genres, moods, or any category you want.',
       tags: ['Collections'],
-      action: 'See it work'
+      action: 'See it work',
+      image: '📚'
+    },
+    { 
+      title: 'Discover What\'s Next', 
+      desc: 'Find your next favorite based on what you love. Get personalized recommendations tailored to your taste and preferences.',
+      tags: ['Recommendations'],
+      action: 'See it work',
+      image: '✨'
     },
   ]
+
+  // Carousel state
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const carouselRef = useRef(null)
+  const touchStartX = useRef(0)
+  const touchEndX = useRef(0)
+
+  // Handle touch events for swipe
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX
+  }
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX
+  }
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return
+    
+    const distance = touchStartX.current - touchEndX.current
+    const isLeftSwipe = distance > 50
+    const isRightSwipe = distance < -50
+
+    if (isLeftSwipe) {
+      setCurrentSlide((prev) => (prev + 1) % useCases.length)
+    }
+    if (isRightSwipe) {
+      setCurrentSlide((prev) => (prev - 1 + useCases.length) % useCases.length)
+    }
+    
+    touchStartX.current = 0
+    touchEndX.current = 0
+  }
+
+
+  const goToSlide = (index) => {
+    setCurrentSlide(index)
+  }
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % useCases.length)
+  }
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + useCases.length) % useCases.length)
+  }
 
   const features = [
     { icon: '🎯', title: 'Track Everything', desc: 'Keep tabs on all your movies, shows, books, and games in one beautiful place' },
@@ -425,13 +482,30 @@ function App() {
           </div>
         </section>
 
-      {/* Use Cases Section */}
+      {/* Use Cases Section - Carousel */}
       <section className="use-cases-section" id="features">
         <div className="container">
           <h2 className="section-title" style={{ textAlign: 'center' }}>Explore Archivum</h2>
-          <div className="use-cases-grid">
+          <div 
+            className="use-cases-carousel"
+            ref={carouselRef}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            <div className="use-cases-carousel-wrapper">
+              <div 
+                className="use-cases-carousel-track"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
             {useCases.map((useCase, index) => (
-              <div key={index} className="use-case-card">
+                <div key={index} className="use-case-slide">
+                  <div className="use-case-slide-image">
+                    <div className="use-case-image-placeholder">
+                      {useCase.image}
+                    </div>
+                  </div>
+                  <div className="use-case-slide-content">
                 <div className="use-case-header">
                   <h3 className="use-case-title">{useCase.title}</h3>
                   <div className="use-case-tags">
@@ -442,7 +516,38 @@ function App() {
                 </div>
                 <p className="use-case-desc">{useCase.desc}</p>
               </div>
+                </div>
             ))}
+              </div>
+            </div>
+            
+            {/* Navigation Arrows */}
+            <button 
+              className="carousel-arrow carousel-arrow-left"
+              onClick={prevSlide}
+              aria-label="Previous slide"
+            >
+              ‹
+            </button>
+            <button 
+              className="carousel-arrow carousel-arrow-right"
+              onClick={nextSlide}
+              aria-label="Next slide"
+            >
+              ›
+            </button>
+
+            {/* Dots Indicator */}
+            <div className="carousel-dots">
+              {useCases.map((_, index) => (
+                <button
+                  key={index}
+                  className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </section>

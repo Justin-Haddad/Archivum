@@ -39,7 +39,7 @@ function Header({ onSignInClick, onSignUpClick }) {
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
-    }
+        }
   }, [showDiscoverMenu])
 
   return (
@@ -60,16 +60,16 @@ function Header({ onSignInClick, onSignUpClick }) {
             ref={discoverMenuRef}
             className="nav-link-dropdown"
           >
-            <a 
+          <a 
               href="/discover/trending" 
-              className="nav-link" 
+            className="nav-link" 
               onClick={(e) => { 
                 e.preventDefault(); 
                 setShowDiscoverMenu(!showDiscoverMenu);
               }}
-            >
-              Discover
-            </a>
+          >
+            Discover
+          </a>
             {showDiscoverMenu && (
               <div className="nav-dropdown-menu">
                 <a 

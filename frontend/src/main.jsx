@@ -25,13 +25,13 @@ createRoot(document.getElementById('root')).render(
           <Route path="/" element={<App />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/account-settings" element={<AccountSettings />} />
-          <Route path="/library" element={<Library />} />
+            <Route path="/library" element={<Library />} />
           <Route path="/discover/trending" element={<DiscoverTrending />} />
           <Route path="/discover/recommended" element={<DiscoverRecommended />} />
           <Route path="/discover/new-releases" element={<DiscoverNewReleases />} />
           <Route path="/discover/explore" element={<DiscoverExplore />} />
-          <Route path="/friends" element={<Friends />} />
-          <Route path="/media/:mediaType/:mediaId" element={<MediaDetail />} />
+            <Route path="/friends" element={<Friends />} />
+            <Route path="/media/:mediaType/:mediaId" element={<MediaDetail />} />
         </Routes>
       </BrowserRouter>
         <Toaster position="top-center" />

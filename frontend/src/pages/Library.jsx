@@ -305,17 +305,17 @@ function Library() {
       return
     }
 
-    setSearching(true)
-    setShowSearch(true)
-    setShowRecommendations(false)
-
+      setSearching(true)
+      setShowSearch(true)
+      setShowRecommendations(false)
+      
     // Filter library items based on search query
     const query = searchQuery.toLowerCase().trim()
     let filtered = library
 
     // Filter by active tab
     if (activeTab !== 'all') {
-      const currentType = mediaTypes[activeTab]?.type
+    const currentType = mediaTypes[activeTab]?.type
       filtered = filtered.filter(item => item.media_type === currentType)
     }
 
@@ -779,11 +779,11 @@ function Library() {
             <h2 className="section-title">Search Results</h2>
             {searchResults.length > 0 ? (
               viewMode === 'grid' ? (
-                <div className="media-grid">
+              <div className="media-grid">
                   {searchResults.map(item => renderMediaCard(item, true))}
-                </div>
-              ) : (
-                <div className="media-list">
+              </div>
+            ) : (
+              <div className="media-list">
                   {searchResults.map(item => renderMediaListItem(item, true))}
                 </div>
               )

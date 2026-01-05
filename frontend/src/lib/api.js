@@ -214,7 +214,7 @@ export const searchGames = async (query) => {
   }
 
   // Check if CORS proxy is configured (declare outside try block so it's available in catch)
-  const useProxy = CORS_PROXY && CORS_PROXY.trim() !== ''
+    const useProxy = CORS_PROXY && CORS_PROXY.trim() !== ''
 
   try {
     const targetUrl = `${IGDB_BASE_URL}/games`
@@ -484,7 +484,7 @@ export const getAiringTodayTVShows = async () => {
   } catch (error) {
     console.error('Error fetching airing today TV shows:', error)
     return []
-  } 
+  }
 }
 
 // Get Popular TV Shows
@@ -915,13 +915,13 @@ export const getGameDetails = async (gameId) => {
         },
         body: JSON.stringify({
           url: targetUrl,
-          method: 'POST',
-          headers: {
-            'Client-ID': IGDB_CLIENT_ID,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'text/plain',
-          },
-          body: gameQuery,
+      method: 'POST',
+      headers: {
+        'Client-ID': IGDB_CLIENT_ID,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'text/plain',
+      },
+      body: gameQuery,
         }),
       }
     } else {
@@ -1010,13 +1010,13 @@ export const getGameDetails = async (gameId) => {
             },
             body: JSON.stringify({
               url: genreTargetUrl,
-              method: 'POST',
-              headers: {
-                'Client-ID': IGDB_CLIENT_ID,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'text/plain',
-              },
-              body: genreQuery,
+          method: 'POST',
+          headers: {
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'text/plain',
+          },
+          body: genreQuery,
             }),
           }
         } else {
@@ -1073,13 +1073,13 @@ export const getGameDetails = async (gameId) => {
             },
             body: JSON.stringify({
               url: platformTargetUrl,
-              method: 'POST',
-              headers: {
-                'Client-ID': IGDB_CLIENT_ID,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'text/plain',
-              },
-              body: platformQuery,
+          method: 'POST',
+          headers: {
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'text/plain',
+          },
+          body: platformQuery,
             }),
           }
         } else {
@@ -1144,25 +1144,25 @@ export const getGameDetails = async (gameId) => {
               },
               body: JSON.stringify({
                 url: companyTargetUrl,
-                method: 'POST',
-                headers: {
-                  'Client-ID': IGDB_CLIENT_ID,
-                  'Authorization': `Bearer ${token}`,
-                  'Content-Type': 'text/plain',
-                },
+          method: 'POST',
+          headers: {
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'text/plain',
+          },
                 body: companyQuery,
               }),
             }
           } else {
             companyApiUrl = companyTargetUrl
             companyFetchOptions = {
-              method: 'POST',
-              headers: {
-                'Client-ID': IGDB_CLIENT_ID,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'text/plain',
+          method: 'POST',
+          headers: {
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'text/plain',
                 'Accept': 'application/json',
-              },
+          },
               body: companyQuery,
             }
           }
@@ -1230,13 +1230,13 @@ export const getGameDetails = async (gameId) => {
             },
             body: JSON.stringify({
               url: websiteTargetUrl,
-              method: 'POST',
-              headers: {
-                'Client-ID': IGDB_CLIENT_ID,
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'text/plain',
-              },
-              body: websiteQuery,
+          method: 'POST',
+          headers: {
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'text/plain',
+          },
+          body: websiteQuery,
             }),
           }
         } else {
