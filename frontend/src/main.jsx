@@ -13,6 +13,10 @@ import DiscoverTrending from './pages/DiscoverTrending.jsx'
 import DiscoverRecommended from './pages/DiscoverRecommended.jsx'
 import DiscoverNewReleases from './pages/DiscoverNewReleases.jsx'
 import DiscoverExplore from './pages/DiscoverExplore.jsx'
+import DiscoverMovies from './pages/DiscoverMovies.jsx'
+import DiscoverTVShows from './pages/DiscoverTVShows.jsx'
+import DiscoverBooks from './pages/DiscoverBooks.jsx'
+import DiscoverGames from './pages/DiscoverGames.jsx'
 import { AuthProvider } from './contexts/AuthContext'
 import { LibraryProvider } from './contexts/LibraryContext'
 
@@ -30,6 +34,10 @@ createRoot(document.getElementById('root')).render(
           <Route path="/discover/recommended" element={<DiscoverRecommended />} />
           <Route path="/discover/new-releases" element={<DiscoverNewReleases />} />
           <Route path="/discover/explore" element={<DiscoverExplore />} />
+          <Route path="/discover/movies" element={<DiscoverMovies />} />
+          <Route path="/discover/tv-shows" element={<DiscoverTVShows />} />
+          <Route path="/discover/books" element={<DiscoverBooks />} />
+          <Route path="/discover/games" element={<DiscoverGames />} />
             <Route path="/friends" element={<Friends />} />
             <Route path="/media/:mediaType/:mediaId" element={<MediaDetail />} />
         </Routes>

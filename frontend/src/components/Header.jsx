@@ -100,6 +100,35 @@ function Header({ onSignInClick, onSignUpClick }) {
                 >
                   New Releases
                 </a>
+                <div className="nav-dropdown-divider"></div>
+                <a 
+                  href="/discover/movies" 
+                  className="nav-dropdown-item"
+                  onClick={(e) => { e.preventDefault(); navigate('/discover/movies'); setShowDiscoverMenu(false); }}
+                >
+                  Movies
+                </a>
+                <a 
+                  href="/discover/tv-shows" 
+                  className="nav-dropdown-item"
+                  onClick={(e) => { e.preventDefault(); navigate('/discover/tv-shows'); setShowDiscoverMenu(false); }}
+                >
+                  TV Shows
+                </a>
+                <a 
+                  href="/discover/books" 
+                  className="nav-dropdown-item"
+                  onClick={(e) => { e.preventDefault(); navigate('/discover/books'); setShowDiscoverMenu(false); }}
+                >
+                  Books
+                </a>
+                <a 
+                  href="/discover/games" 
+                  className="nav-dropdown-item"
+                  onClick={(e) => { e.preventDefault(); navigate('/discover/games'); setShowDiscoverMenu(false); }}
+                >
+                  Video Games
+                </a>
               </div>
             )}
           </div>

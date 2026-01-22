@@ -565,6 +565,282 @@ export const getPopularMovies = async () => {
   }
 }
 
+// Get Trending Books (using Open Library's popular subjects)
+export const getTrendingBooks = async () => {
+  try {
+    // Use Open Library's subject API for popular books
+    const response = await fetch(
+      `${OPEN_LIBRARY_BASE}/subjects/bestsellers.json?limit=20`
+    )
+    const data = await response.json()
+    
+    if (!data.works || data.works.length === 0) {
+      // Fallback: search for popular books
+      return await getPopularBooks()
+    }
+    
+    return data.works.map(work => {
+      const coverId = work.cover_id
+      const posterUrl = coverId 
+        ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`
+        : null
+      
+      return {
+        media_type: 'book',
+        media_id: work.key?.replace('/works/', '') || work.key || Math.random().toString(),
+        title: work.title,
+        year: work.first_publish_year || null,
+        poster_url: posterUrl,
+        overview: work.first_sentence?.[0] || null,
+        author: work.author_name?.[0] || 'Unknown Author',
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching trending books:', error)
+    // Fallback to popular books
+    return await getPopularBooks()
+  }
+}
+
+// Get Popular Books (using Open Library's search with popular subjects)
+export const getPopularBooks = async () => {
+  try {
+    // Search for popular books using a general query
+    const response = await fetch(
+      `${OPEN_LIBRARY_BASE}/search.json?q=*&limit=20`
+    )
+    const data = await response.json()
+    
+    return (data.docs || []).map(book => {
+      const coverId = book.cover_i
+      const posterUrl = coverId 
+        ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`
+        : null
+      
+      return {
+        media_type: 'book',
+        media_id: book.key?.replace('/works/', '') || book.key || Math.random().toString(),
+        title: book.title,
+        year: book.first_publish_year || null,
+        poster_url: posterUrl,
+        overview: book.first_sentence?.[0] || null,
+        author: book.author_name?.[0] || 'Unknown Author',
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching popular books:', error)
+    return []
+  }
+}
+
+// Get New Releases Books (recently published)
+export const getNewReleasesBooks = async () => {
+  try {
+    // Search for books published in the last year
+    const currentYear = new Date().getFullYear()
+    const response = await fetch(
+      `${OPEN_LIBRARY_BASE}/search.json?first_publish_year=[${currentYear - 1} TO ${currentYear}]&sort=first_publish_year desc&limit=20`
+    )
+    const data = await response.json()
+    
+    return (data.docs || []).map(book => {
+      const coverId = book.cover_i
+      const posterUrl = coverId 
+        ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`
+        : null
+      
+      return {
+        media_type: 'book',
+        media_id: book.key?.replace('/works/', '') || book.key || Math.random().toString(),
+        title: book.title,
+        year: book.first_publish_year || null,
+        poster_url: posterUrl,
+        overview: book.first_sentence?.[0] || null,
+        author: book.author_name?.[0] || 'Unknown Author',
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching new releases books:', error)
+    return []
+  }
+}
+
+// Get Trending Games (IGDB)
+export const getTrendingGames = async () => {
+  const token = await getIGDBAccessToken()
+  if (!token) {
+    console.warn('IGDB credentials not set')
+    return []
+  }
+
+  const useProxy = CORS_PROXY && CORS_PROXY.trim() !== ''
+  
+  try {
+    const gameQuery = `fields id,name,first_release_date,cover.image_id,rating,aggregated_rating; where rating != null & aggregated_rating != null; sort rating desc; limit 20;`
+    const targetUrl = `${IGDB_BASE_URL}/games`
+    
+    let apiUrl, fetchOptions
+    if (useProxy) {
+      apiUrl = CORS_PROXY
+      fetchOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: targetUrl,
+          method: 'POST',
+          headers: {
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'text/plain',
+          },
+          body: gameQuery,
+        }),
+      }
+    } else {
+      apiUrl = targetUrl
+      fetchOptions = {
+        method: 'POST',
+        headers: {
+          'Client-ID': IGDB_CLIENT_ID,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/plain',
+          'Accept': 'application/json',
+        },
+        body: gameQuery,
+      }
+    }
+    
+    const response = await fetch(apiUrl, fetchOptions)
+    
+    if (!response.ok) {
+      console.error('IGDB API Error:', response.status)
+      return []
+    }
+    
+    let games
+    if (useProxy) {
+      const proxyResponse = await response.json()
+      games = proxyResponse.contents ? JSON.parse(proxyResponse.contents) : proxyResponse
+    } else {
+      games = await response.json()
+    }
+    
+    return games.map(game => {
+      let coverUrl = null
+      if (game.cover) {
+        if (typeof game.cover === 'number') {
+          coverUrl = `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover}.jpg`
+        } else if (game.cover.image_id) {
+          coverUrl = `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg`
+        }
+      }
+      
+      return {
+        media_type: 'game',
+        media_id: game.id.toString(),
+        title: game.name,
+        year: game.first_release_date 
+          ? new Date(game.first_release_date * 1000).getFullYear() 
+          : null,
+        poster_url: coverUrl,
+        rating: game.rating ? (game.rating / 10).toFixed(1) : (game.aggregated_rating ? (game.aggregated_rating / 10).toFixed(1) : null),
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching trending games:', error)
+    return []
+  }
+}
+
+// Get New Releases Games (IGDB)
+export const getNewReleasesGames = async () => {
+  const token = await getIGDBAccessToken()
+  if (!token) {
+    console.warn('IGDB credentials not set')
+    return []
+  }
+
+  const useProxy = CORS_PROXY && CORS_PROXY.trim() !== ''
+  
+  try {
+    const currentTimestamp = Math.floor(Date.now() / 1000)
+    const sixMonthsAgo = currentTimestamp - (6 * 30 * 24 * 60 * 60)
+    const gameQuery = `fields id,name,first_release_date,cover.image_id,rating,aggregated_rating; where first_release_date >= ${sixMonthsAgo} & first_release_date <= ${currentTimestamp}; sort first_release_date desc; limit 20;`
+    const targetUrl = `${IGDB_BASE_URL}/games`
+    
+    let apiUrl, fetchOptions
+    if (useProxy) {
+      apiUrl = CORS_PROXY
+      fetchOptions = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          url: targetUrl,
+          method: 'POST',
+          headers: {
+            'Client-ID': IGDB_CLIENT_ID,
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'text/plain',
+          },
+          body: gameQuery,
+        }),
+      }
+    } else {
+      apiUrl = targetUrl
+      fetchOptions = {
+        method: 'POST',
+        headers: {
+          'Client-ID': IGDB_CLIENT_ID,
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'text/plain',
+          'Accept': 'application/json',
+        },
+        body: gameQuery,
+      }
+    }
+    
+    const response = await fetch(apiUrl, fetchOptions)
+    
+    if (!response.ok) {
+      console.error('IGDB API Error:', response.status)
+      return []
+    }
+    
+    let games
+    if (useProxy) {
+      const proxyResponse = await response.json()
+      games = proxyResponse.contents ? JSON.parse(proxyResponse.contents) : proxyResponse
+    } else {
+      games = await response.json()
+    }
+    
+    return games.map(game => {
+      let coverUrl = null
+      if (game.cover) {
+        if (typeof game.cover === 'number') {
+          coverUrl = `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover}.jpg`
+        } else if (game.cover.image_id) {
+          coverUrl = `https://images.igdb.com/igdb/image/upload/t_cover_big/${game.cover.image_id}.jpg`
+        }
+      }
+      
+      return {
+        media_type: 'game',
+        media_id: game.id.toString(),
+        title: game.name,
+        year: game.first_release_date 
+          ? new Date(game.first_release_date * 1000).getFullYear() 
+          : null,
+        poster_url: coverUrl,
+        rating: game.rating ? (game.rating / 10).toFixed(1) : (game.aggregated_rating ? (game.aggregated_rating / 10).toFixed(1) : null),
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching new releases games:', error)
+    return []
+  }
+}
+
 // Universal search function
 export const searchMedia = async (query, mediaType) => {
   switch (mediaType) {
