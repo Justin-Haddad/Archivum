@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from './contexts/AuthContext'
 import Header from './components/Header'
@@ -6,196 +6,80 @@ import './App.css'
 
 function App() {
   const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('home')
-  const [mediaType, setMediaType] = useState('all')
-  const [searchQuery, setSearchQuery] = useState('')
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authMode, setAuthMode] = useState('login')
-  const [showProfileMenu, setShowProfileMenu] = useState(false)
-  const [showProfileModal, setShowProfileModal] = useState(false)
-  const [showAccountModal, setShowAccountModal] = useState(false)
-  const { user, signUp, signIn, signOut, loading } = useAuth()
+  const [openFaqIndex, setOpenFaqIndex] = useState(0)
+  const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 })
+  const { user, signUp, signIn, loading } = useAuth()
 
-  const trendingMedia = [
-    { 
-      id: 1, 
-      title: 'Oppenheimer', 
-      type: 'movie', 
-      year: 2023, 
-      rating: 4.8, 
-      poster: '🎬',
-      watched: false,
-      userRating: null
+  const socialProof = ['TMDB Powered', 'Open Library', 'IGDB Integration', 'Supabase Auth', 'React + Vite']
+
+  const featureBlocks = [
+    {
+      eyebrow: 'Unified Archive',
+      title: 'Track every movie, show, book, and game in one command center.',
+      description: 'No more split tools. Archivum keeps your full media life in one clean archive with ratings, watch status, and custom notes.',
+      points: ['One library across all media types', 'Fast filtering and sort controls', 'Quick add flows from discovery'],
+      cta: 'Open My Archive',
+      route: '/library',
+      visual: '📚',
     },
-    { 
-      id: 2, 
-      title: 'Breaking Bad', 
-      type: 'show', 
-      year: 2008, 
-      rating: 4.9, 
-      poster: '📺',
-      watched: true,
-      userRating: 5
+    {
+      eyebrow: 'Smarter Discovery',
+      title: 'Find what is worth your time with curated trends and deep browsing.',
+      description: 'Explore trending, new releases, and category hubs tailored to movies, TV, books, and games.',
+      points: ['Dedicated discovery pages by media type', 'Rich detail pages with metadata', 'Designed for quick decision making'],
+      cta: 'Explore Discover',
+      route: '/discover/trending',
+      visual: '✨',
+      reverse: true,
     },
-    { 
-      id: 3, 
-      title: 'Dune', 
-      type: 'book', 
-      year: 1965, 
-      rating: 4.7, 
-      poster: '📖',
-      watched: false,
-      userRating: null
-    },
-    { 
-      id: 4, 
-      title: 'The Last of Us', 
-      type: 'show', 
-      year: 2023, 
-      rating: 4.6, 
-      poster: '📺',
-      watched: true,
-      userRating: 4.5
-    },
-    { 
-      id: 5, 
-      title: 'Atomic Habits', 
-      type: 'book', 
-      year: 2018, 
-      rating: 4.8, 
-      poster: '📖',
-      watched: false,
-      userRating: null
-    },
-    { 
-      id: 6, 
-      title: 'Inception', 
-      type: 'movie', 
-      year: 2010, 
-      rating: 4.9, 
-      poster: '🎬',
-      watched: true,
-      userRating: 5
-    },
-    { 
-      id: 7, 
-      title: 'Elden Ring', 
-      type: 'game', 
-      year: 2022, 
-      rating: 4.7, 
-      poster: '🎮',
-      watched: false,
-      userRating: null
-    },
-    { 
-      id: 8, 
-      title: 'The Legend of Zelda', 
-      type: 'game', 
-      year: 2023, 
-      rating: 4.9, 
-      poster: '🎮',
-      watched: true,
-      userRating: 5
+    {
+      eyebrow: 'Profile & Community',
+      title: 'Build your profile, share your taste, and connect with friends.',
+      description: 'Turn your archive into identity. Keep it private or public, upload an avatar, and compare journeys with friends.',
+      points: ['Custom profile with media stats', 'Account settings and personalization', 'Friends flow built for social discovery'],
+      cta: 'View Profile',
+      route: '/profile',
+      visual: '👥',
     },
   ]
 
-  const stats = {
-    moviesWatched: 127,
-    showsWatched: 43,
-    booksRead: 56,
-    gamesPlayed: 34,
-    totalHours: 2847
-  }
-
-  const useCases = [
-    { 
-      title: 'Track Your Media', 
-      desc: 'Build a comprehensive watchlist: track movies you want to see, shows you\'re watching, books you\'re reading, and games you\'re playing.',
-      tags: ['My Archive'],
-      action: 'See it work',
-      image: '🎬'
-    },
-    { 
-      title: 'Rate & Review Everything', 
-      desc: 'Rate your favorite media from 1-10 stars and leave personal notes. Build your personal rating system over time.',
-      tags: ['All Media'],
-      action: 'See it work',
-      image: '⭐'
-    },
-    { 
-      title: 'Explore Endlessly', 
-      desc: 'Search millions of titles across movies, TV shows, books, and games.',
-      tags: ['Discover'],
-      action: 'See it work',
-      image: '🔍'
-    },
-    { 
-      title: 'Build Your Collection', 
-      desc: 'Organize your media into custom collections. Create shelves for genres, moods, or any category you want.',
-      tags: ['Collections'],
-      action: 'See it work',
-      image: '📚'
-    },
-    { 
-      title: 'Discover What\'s Next', 
-      desc: 'Find your next favorite based on what you love. Get personalized recommendations tailored to your taste and preferences.',
-      tags: ['Recommendations'],
-      action: 'See it work',
-      image: '✨'
-    },
+  const showcase = [
+    { title: 'Movie Discovery', subtitle: 'Trending picks', emoji: '🎬' },
+    { title: 'Book Hub', subtitle: 'Top reads', emoji: '📖' },
+    { title: 'Game Explorer', subtitle: 'What to play', emoji: '🎮' },
+    { title: 'TV Watchlist', subtitle: 'Series tracker', emoji: '📺' },
+    { title: 'Media Detail', subtitle: 'Deep metadata', emoji: '🧠' },
+    { title: 'Your Archive', subtitle: 'Everything saved', emoji: '🗂️' },
   ]
 
-  // Carousel state
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const carouselRef = useRef(null)
-  const touchStartX = useRef(0)
-  const touchEndX = useRef(0)
+  const values = [
+    { icon: '⚡', title: 'Fast workflow', text: 'Add and rate items in seconds with a lightweight, keyboard-friendly flow.' },
+    { icon: '🧩', title: 'All-in-one stack', text: 'Movies, TV, books, and games live together in a single structured library.' },
+    { icon: '🔒', title: 'Privacy controls', text: 'Keep your profile private or share your stats with your friends.' },
+    { icon: '📈', title: 'Insightful stats', text: 'See your taste patterns and progress over time with clear totals.' },
+    { icon: '🎨', title: 'Clean design', text: 'A premium editorial UI built for focus, not clutter.' },
+    { icon: '🛠️', title: 'Built to scale', text: 'Supabase-powered auth and data foundation for future features.' },
+  ]
 
-  // Handle touch events for swipe
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX
-  }
-
-  const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX
-  }
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return
-    
-    const distance = touchStartX.current - touchEndX.current
-    const isLeftSwipe = distance > 50
-    const isRightSwipe = distance < -50
-
-    if (isLeftSwipe) {
-      setCurrentSlide((prev) => (prev + 1) % useCases.length)
-    }
-    if (isRightSwipe) {
-      setCurrentSlide((prev) => (prev - 1 + useCases.length) % useCases.length)
-    }
-    
-    touchStartX.current = 0
-    touchEndX.current = 0
-  }
-
-
-  const goToSlide = (index) => {
-    setCurrentSlide(index)
-  }
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % useCases.length)
-  }
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + useCases.length) % useCases.length)
-  }
-
-  const features = [
-    { icon: '🎯', title: 'Track Everything', desc: 'Keep tabs on all your movies, shows, books, and games in one beautiful place' },
-    { icon: '⭐', title: 'Rate & Review', desc: 'Rate your favorites and leave personal notes for each item in your collection' },
-    { icon: '🔍', title: 'Discover New Media', desc: 'Search millions of titles and find your next favorite watch or read' },
-    { icon: '📊', title: 'Visual Insights', desc: 'See your viewing habits and collection stats with beautiful visualizations' },
+  const faqs = [
+    {
+      question: 'Is Archivum free to start?',
+      answer: 'Yes. You can create an account and start building your archive right away with no credit card required.',
+    },
+    {
+      question: 'What can I track right now?',
+      answer: 'Movies, TV shows, books, and video games. You can rate items, organize your archive, and discover new picks.',
+    },
+    {
+      question: 'Can I keep my profile private?',
+      answer: 'Yes. Profile privacy is built-in, and you can switch between public and private in your profile settings.',
+    },
+    {
+      question: 'Where does discovery data come from?',
+      answer: 'Archivum uses trusted external APIs like TMDB, Open Library, and IGDB for broad discovery coverage.',
+    },
   ]
 
   const handleAuth = async (e) => {
@@ -241,20 +125,17 @@ function App() {
     setShowAuthModal(true)
   }
 
-  const renderStars = (rating) => {
-    const stars = []
-    for (let i = 1; i <= 5; i++) {
-      stars.push(
-        <span key={i} className={i <= rating ? 'star filled' : 'star'}>
-          ★
-        </span>
-      )
-    }
-    return stars
+  const handleHeroMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width - 0.5) * 14
+    const y = ((e.clientY - rect.top) / rect.height - 0.5) * 14
+    setHeroTilt({ x, y })
   }
 
+  const resetHeroTilt = () => setHeroTilt({ x: 0, y: 0 })
+
   return (
-    <div className="app">
+    <div className="app home-redesign">
       {/* Header - Top Navigation */}
       <Header onSignInClick={openAuthModal} onSignUpClick={() => { setAuthMode('signup'); setShowAuthModal(true); }} />
 
@@ -296,330 +177,172 @@ function App() {
         </div>
       )}
 
-      {/* Profile Modal */}
-      {showProfileModal && (
-        <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
-          <div className="modal modal-large" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowProfileModal(false)}>×</button>
-            <h2 className="modal-title">Profile</h2>
-            <p className="modal-subtitle">Manage your public profile information</p>
-            
-            <form className="profile-form" onSubmit={(e) => { e.preventDefault(); alert('Profile update coming soon!'); }}>
-              {/* Profile Avatar */}
-              <div className="form-section">
-                <label className="form-label">Profile Photo</label>
-                <div className="avatar-upload">
-                  <div className="avatar-preview">
-                    {(user.user_metadata?.username || user.email).charAt(0).toUpperCase()}
-                  </div>
-                  <div className="avatar-actions">
-                    <button type="button" className="btn-secondary">Change Photo</button>
-                    <p className="form-hint">JPG, PNG or GIF. Max 2MB.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Username */}
-              <div className="form-section">
-                <label className="form-label">Username</label>
-                <input 
-                  type="text" 
-                  className="auth-input" 
-                  defaultValue={user.user_metadata?.username || ''} 
-                  placeholder="Enter your username"
-                />
-              </div>
-
-              {/* Display Name */}
-              <div className="form-section">
-                <label className="form-label">Display Name</label>
-                <input 
-                  type="text" 
-                  className="auth-input" 
-                  defaultValue={user.user_metadata?.full_name || ''} 
-                  placeholder="Enter your display name"
-                />
-              </div>
-
-              {/* Bio */}
-              <div className="form-section">
-                <label className="form-label">Bio</label>
-                <textarea 
-                  className="auth-input bio-input" 
-                  rows="4"
-                  defaultValue={user.user_metadata?.bio || ''} 
-                  placeholder="Tell us about yourself..."
-                  maxLength="200"
-                />
-                <p className="form-hint">Brief description for your profile. Max 200 characters.</p>
-              </div>
-
-              <div className="modal-actions">
-                <button type="button" className="btn-secondary" onClick={() => setShowProfileModal(false)}>
-                  Cancel
+      <main className="main-content home-main-modern">
+        <section className="home-hero-modern">
+          <div className="container home-hero-grid">
+            <div className="home-hero-copy">
+              <span className="hero-eyebrow">Built for modern media tracking</span>
+              <h1 className="home-hero-title-modern">Your entire media life, perfectly organized.</h1>
+              <p className="home-hero-subtitle-modern">
+                Archivum helps you track, rate, and discover movies, TV, books, and games in one premium command center.
+              </p>
+              <div className="home-hero-cta-row">
+                <button
+                  className="btn-primary"
+                  onClick={() => {
+                    if (user) navigate('/discover/trending')
+                    else {
+                      setAuthMode('signup')
+                      setShowAuthModal(true)
+                    }
+                  }}
+                >
+                  {user ? 'Start Discovering' : 'Start Free'}
                 </button>
-                <button type="submit" className="btn-primary">
-                  Save Changes
+                <button className="btn-secondary" onClick={() => navigate('/library')}>
+                  View Demo Archive
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Account Settings Modal */}
-      {showAccountModal && (
-        <div className="modal-overlay" onClick={() => setShowAccountModal(false)}>
-          <div className="modal modal-large" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setShowAccountModal(false)}>×</button>
-            <h2 className="modal-title">Account Settings</h2>
-            <p className="modal-subtitle">Manage your account security and email</p>
-            
-            <div className="settings-sections">
-              {/* Email Section */}
-              <div className="settings-section">
-                <h3 className="settings-section-title">Email Address</h3>
-                <div className="settings-section-content">
-                  <div className="current-value">
-                    <span className="value-label">Current Email:</span>
-                    <span className="value-text">{user.email}</span>
-                    {user.email_confirmed_at ? (
-                      <span className="verified-badge">✓ Verified</span>
-                    ) : (
-                      <span className="unverified-badge">⚠ Not Verified</span>
-                    )}
-                  </div>
-                  <button 
-                    type="button" 
-                    className="btn-secondary"
-                    onClick={() => alert('Change email feature coming soon!')}
-                  >
-                    Change Email
-                  </button>
-                </div>
-              </div>
-
-              {/* Password Section */}
-              <div className="settings-section">
-                <h3 className="settings-section-title">Password</h3>
-                <div className="settings-section-content">
-                  <p className="settings-description">
-                    Update your password to keep your account secure.
-                  </p>
-                  <form onSubmit={(e) => { e.preventDefault(); alert('Password change coming soon!'); }}>
-                    <div className="form-group">
-                      <label className="form-label">Current Password</label>
-                      <input 
-                        type="password" 
-                        className="auth-input" 
-                        placeholder="Enter current password"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">New Password</label>
-                      <input 
-                        type="password" 
-                        className="auth-input" 
-                        placeholder="Enter new password"
-                        minLength="6"
-                        required
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Confirm New Password</label>
-                      <input 
-                        type="password" 
-                        className="auth-input" 
-                        placeholder="Confirm new password"
-                        minLength="6"
-                        required
-                      />
-                    </div>
-                    <button type="submit" className="btn-primary">
-                      Update Password
-                    </button>
-                  </form>
-                </div>
               </div>
             </div>
 
-            <div className="modal-actions">
-              <button type="button" className="btn-secondary" onClick={() => setShowAccountModal(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            <div
+              className="home-hero-visual"
+              onMouseMove={handleHeroMouseMove}
+              onMouseLeave={resetHeroTilt}
+            >
+              <div className="home-hero-fluid-bg">
+                <span className="fluid-orb orb-one"></span>
+                <span className="fluid-orb orb-two"></span>
+                <span className="fluid-orb orb-three"></span>
+              </div>
 
-      {/* Main Content Area */}
-      <main className="main-content">
-        {/* Hero Section - Center-aligned, Editorial */}
-        <section className="hero-section">
-          <div className="hero-content">
-            <h1 className="hero-title">
-              Track your Media, Build your Archive 
-            </h1>
-            <p className="hero-subtitle">
-              Track your favorite movies, shows, books, and games. Rate what you love and discover what's next.
-            </p>
-            <div className="hero-video-container">
-              <video 
-                className="hero-video"
-                autoPlay
-                loop
-                muted
-                playsInline
-                preload="auto"
-                src="/video.mp4"
-                onError={(e) => console.error('Video error:', e)}
-                onLoadedData={() => console.log('Video loaded successfully')}
+              <div
+                className="home-hero-video-shell"
+                style={{
+                  transform: `perspective(1200px) rotateX(${-heroTilt.y}deg) rotateY(${heroTilt.x}deg) translateZ(0)`,
+                }}
               >
-                Your browser does not support the video tag.
-              </video>
+                <video className="hero-video" autoPlay loop muted playsInline preload="auto" src="/video.mp4">
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+
+              <div className="hero-float-card card-one">Live Discovery</div>
+              <div className="hero-float-card card-two">4 Media Types</div>
             </div>
           </div>
         </section>
 
-      {/* Use Cases Section - Carousel */}
-      <section className="use-cases-section" id="features">
-        <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center' }}>Explore Archivum</h2>
-          <div 
-            className="use-cases-carousel"
-            ref={carouselRef}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div className="use-cases-carousel-wrapper">
-              <div 
-                className="use-cases-carousel-track"
-                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-              >
-            {useCases.map((useCase, index) => (
-                <div key={index} className="use-case-slide">
-                  <div className="use-case-slide-image">
-                    <div className="use-case-image-placeholder">
-                      {useCase.image}
-                    </div>
-                  </div>
-                  <div className="use-case-slide-content">
-                <div className="use-case-header">
-                  <h3 className="use-case-title">{useCase.title}</h3>
-                  <div className="use-case-tags">
-                    {useCase.tags.map((tag, i) => (
-                      <span key={i} className="use-case-tag">{tag}</span>
-                    ))}
-                  </div>
-                </div>
-                <p className="use-case-desc">{useCase.desc}</p>
-              </div>
-                </div>
+        <section className="home-social-proof">
+          <div className="container social-proof-row">
+            <span className="social-proof-label">Trusted stack</span>
+            {socialProof.map((item) => (
+              <span key={item} className="social-proof-item">{item}</span>
             ))}
+          </div>
+        </section>
+
+        {featureBlocks.map((feature) => (
+          <section key={feature.title} className="home-feature-section">
+            <div className={`container home-feature-grid ${feature.reverse ? 'reverse' : ''}`}>
+              <div className="home-feature-copy">
+                <span className="feature-eyebrow">{feature.eyebrow}</span>
+                <h2 className="home-feature-title">{feature.title}</h2>
+                <p className="home-feature-text">{feature.description}</p>
+                <ul className="home-feature-bullets">
+                  {feature.points.map((point) => (
+                    <li key={point}>{point}</li>
+                  ))}
+                </ul>
+                <button className="feature-link-btn" onClick={() => navigate(feature.route)}>
+                  {feature.cta} →
+                </button>
+              </div>
+              <div className="home-feature-visual">
+                <div className="home-feature-mockup">{feature.visual}</div>
               </div>
             </div>
-            
-            {/* Navigation Arrows */}
-            <button 
-              className="carousel-arrow carousel-arrow-left"
-              onClick={prevSlide}
-              aria-label="Previous slide"
-            >
-              ‹
-            </button>
-            <button 
-              className="carousel-arrow carousel-arrow-right"
-              onClick={nextSlide}
-              aria-label="Next slide"
-            >
-              ›
-            </button>
+          </section>
+        ))}
 
-            {/* Dots Indicator */}
-            <div className="carousel-dots">
-              {useCases.map((_, index) => (
-                <button
-                  key={index}
-                  className={`carousel-dot ${index === currentSlide ? 'active' : ''}`}
-                  onClick={() => goToSlide(index)}
-                  aria-label={`Go to slide ${index + 1}`}
-                />
+        <section className="home-showcase-section">
+          <div className="container">
+            <div className="showcase-header">
+              <span className="feature-eyebrow">Template-style previews</span>
+              <h2 className="home-feature-title">A premium interface across every workflow.</h2>
+            </div>
+            <div className="showcase-grid">
+              {showcase.map((item) => (
+                <div key={item.title} className="showcase-card">
+                  <div className="showcase-emoji">{item.emoji}</div>
+                  <h3>{item.title}</h3>
+                  <p>{item.subtitle}</p>
+                </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Command Center / Your Library Section */}
-      <section className="command-center-section">
-        <div className="container">
-          <h2 className="section-title" style={{ textAlign: 'center' }}>Your command center for your media collection</h2>
-          <div className="command-center-grid">
-            <div 
-              className="command-card" 
-              onClick={() => navigate('/library')}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="command-icon">📚</div>
-              <h3 className="command-title">Your Library</h3>
-              <p className="command-desc">A central place to view all your movies, shows, books, and games in one organized collection.</p>
+        <section className="home-values-section">
+          <div className="container">
+            <div className="showcase-header">
+              <span className="feature-eyebrow">Why Archivum</span>
+              <h2 className="home-feature-title">Everything you need to stay consistent.</h2>
             </div>
-            <div 
-              className="command-card"
-              onClick={() => navigate('/discover/trending')}
-              style={{ cursor: 'pointer' }}
-            >
-              <div className="command-icon">🔔</div>
-              <h3 className="command-title">Discover</h3>
-              <p className="command-desc">Search and discover new media to add to your collection. Find your next favorite watch or read.</p>
+            <div className="values-grid">
+              {values.map((value) => (
+                <div key={value.title} className="value-card">
+                  <span className="value-icon">{value.icon}</span>
+                  <h3>{value.title}</h3>
+                  <p>{value.text}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
+        <section className="home-faq-section">
+          <div className="container faq-shell">
+            <div className="showcase-header">
+              <span className="feature-eyebrow">FAQ</span>
+              <h2 className="home-feature-title">Questions before you start?</h2>
+            </div>
+            <div className="faq-list">
+              {faqs.map((faq, index) => (
+                <div key={faq.question} className={`faq-item ${openFaqIndex === index ? 'open' : ''}`}>
+                  <button
+                    className="faq-question"
+                    onClick={() => setOpenFaqIndex(openFaqIndex === index ? -1 : index)}
+                  >
+                    <span>{faq.question}</span>
+                    <span>{openFaqIndex === index ? '−' : '+'}</span>
+                  </button>
+                  {openFaqIndex === index && <p className="faq-answer">{faq.answer}</p>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-
+        <section className="home-final-cta">
+          <div className="container final-cta-shell">
+            <h2>Build your archive in minutes.</h2>
+            <p>Start your free Archivum account and turn your media habits into a clean system you will actually keep updated.</p>
+            <button
+              className="btn-primary"
+              onClick={() => {
+                if (user) navigate('/library')
+                else {
+                  setAuthMode('signup')
+                  setShowAuthModal(true)
+                }
+              }}
+            >
+              {user ? 'Go to My Archive' : 'Get Started Free'}
+            </button>
+          </div>
+        </section>
       </main>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="container">
-          <div className="footer-content">
-            <div className="footer-section">
-              <h4>📚 Archivum</h4>
-              <p>Track, rate, and discover your favorite movies, shows, books, and games. Your personal media collection, beautifully organized.</p>
-            </div>
-            <div className="footer-section">
-              <h4>Explore</h4>
-              <a href="#movies">Movies</a>
-              <a href="#shows">TV Shows</a>
-              <a href="#books">Books</a>
-              <a href="#games">Games</a>
-              <a href="#lists">My Lists</a>
-            </div>
-            <div className="footer-section">
-              <h4>Community</h4>
-              <a href="#reviews">Reviews</a>
-              <a href="#users">Top Members</a>
-              <a href="#discussions">Discussions</a>
-            </div>
-            <div className="footer-section">
-              <h4>Connect</h4>
-              <a href="#twitter">Twitter</a>
-              <a href="#instagram">Instagram</a>
-              <a href="#discord">Discord</a>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <p>© 2025 Archivum. Curated with care.</p>
-            <p className="tmdb-attribution">
-              This product uses the TMDB API but is not endorsed or certified by TMDB.
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
