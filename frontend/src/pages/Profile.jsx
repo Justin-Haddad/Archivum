@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useLibrary } from '../contexts/LibraryContext'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
 import Header from '../components/Header'
 import toast from 'react-hot-toast'
 import '../App.css'
@@ -152,235 +151,256 @@ function Profile() {
   const username = profileData.username || user?.email?.split('@')[0] || 'user'
   const bio = profileData.bio || ''
   const avatarUrl = previewUrl || user?.user_metadata?.avatar_url || null
+  const profileInitial = displayName.charAt(0).toUpperCase()
+
+  const statItems = [
+    { key: 'movies', label: 'Movies', icon: 'MOV', value: mediaStats.movies },
+    { key: 'tvShows', label: 'TV Shows', icon: 'TV', value: mediaStats.tvShows },
+    { key: 'books', label: 'Books', icon: 'BKS', value: mediaStats.books },
+    { key: 'games', label: 'Games', icon: 'GMS', value: mediaStats.games },
+  ]
+
+  const recentMilestones = library.slice(0, 4).map((item) => ({
+    id: item.id,
+    title: item.title || item.name || 'Untitled',
+    mediaType: item.media_type ? item.media_type.replace('_', ' ').toUpperCase() : 'MEDIA',
+  }))
 
   return (
-    <div className="page-container">
+    <div className="page-container profile-page">
+      <div className="profile-page-backdrop"></div>
+      <div className="profile-page-overlay"></div>
       <Header />
-      <div className="page-header">
-        <h1 className="page-title">Profile</h1>
-        <p className="page-subtitle">
-          {isEditing ? 'Edit your profile information' : 'View your profile'}
-        </p>
-      </div>
-
-      <div className="page-content">
+      <div className="page-content profile-page-content">
         {isEditing ? (
-          // Edit Mode
-          <form className="profile-form" onSubmit={handleSubmit}>
-            {/* Profile Avatar */}
-            <div className="form-section">
-              <label className="form-label">Profile Photo</label>
-              <div className="avatar-upload">
-                <div className="avatar-preview">
-                  {avatarUrl ? (
-                    <img 
-                      src={avatarUrl} 
-                      alt="Profile" 
-                      className="avatar-image"
-                      onError={(e) => {
-                        e.target.style.display = 'none'
-                        e.target.nextSibling.style.display = 'flex'
-                      }}
-                    />
-                  ) : null}
-                  <div 
-                    className="avatar-initial" 
-                    style={{ display: avatarUrl ? 'none' : 'flex' }}
-                  >
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
-                </div>
-                <div className="avatar-actions">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleImageChange}
-                    accept="image/jpeg,image/jpg,image/png,image/gif"
-                    style={{ display: 'none' }}
-                  />
-                  <button 
-                    type="button" 
-                    className="btn-secondary"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    {uploading ? 'Uploading...' : 'Change Photo'}
-                  </button>
-                  <p className="form-hint">JPG, PNG or GIF. Max 2MB.</p>
-                </div>
+          <div className="profile-edit-shell profile-glass-panel">
+            <div className="profile-edit-header">
+              <div>
+                <h1 className="profile-title">Edit Profile</h1>
+                <p className="profile-subtitle">Update your identity and privacy settings.</p>
               </div>
-            </div>
-
-            {/* Username */}
-            <div className="form-section">
-              <label className="form-label">Username</label>
-              <input 
-                type="text" 
-                name="username"
-                className="auth-input" 
-                value={profileData.username}
-                onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                placeholder="Enter your username"
-                required
-                minLength={3}
-              />
-            </div>
-
-            {/* Display Name */}
-            <div className="form-section">
-              <label className="form-label">Display Name</label>
-              <input 
-                type="text" 
-                name="displayName"
-                className="auth-input" 
-                value={profileData.displayName}
-                onChange={(e) => setProfileData({ ...profileData, displayName: e.target.value })}
-                placeholder="Enter your display name"
-              />
-            </div>
-
-            {/* Bio */}
-            <div className="form-section">
-              <label className="form-label">Bio</label>
-              <textarea 
-                name="bio"
-                className="auth-input bio-input" 
-                rows="4"
-                value={profileData.bio}
-                onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
-                placeholder="Tell us about yourself..."
-                maxLength="200"
-              />
-              <p className="form-hint">Brief description for your profile. Max 200 characters.</p>
-            </div>
-
-            {/* Privacy Setting */}
-            <div className="form-section">
-              <label className="form-label">Privacy</label>
-              <div className="privacy-toggle">
-                <label className="privacy-toggle-label">
-                  <input
-                    type="radio"
-                    name="isPrivate"
-                    value="false"
-                    checked={!profileData.isPrivate}
-                    onChange={() => setProfileData({ ...profileData, isPrivate: false })}
-                  />
-                  <span className="privacy-option">
-                    <strong>Public</strong>
-                    <span className="privacy-description">Friends can see your stats and archive</span>
-                  </span>
-                </label>
-                <label className="privacy-toggle-label">
-                  <input
-                    type="radio"
-                    name="isPrivate"
-                    value="true"
-                    checked={profileData.isPrivate}
-                    onChange={() => setProfileData({ ...profileData, isPrivate: true })}
-                  />
-                  <span className="privacy-option">
-                    <strong>Private</strong>
-                    <span className="privacy-description">Only you can see your stats and archive</span>
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <div className="form-actions">
               <button type="button" className="btn-secondary" onClick={handleCancelEdit}>
                 Cancel
               </button>
-              <button type="submit" className="btn-primary" disabled={loading}>
-                {loading ? 'Saving...' : 'Save Changes'}
-              </button>
             </div>
-          </form>
-        ) : (
-          // View Mode
-          <div className="profile-view">
-            {/* Profile Header */}
-            <div className="profile-header-view">
-              <div className="profile-avatar-large">
-                {avatarUrl ? (
-                  <img 
-                    src={avatarUrl} 
-                    alt={displayName} 
-                    className="avatar-image-large"
-                    onError={(e) => {
-                      e.target.style.display = 'none'
-                      e.target.nextSibling.style.display = 'flex'
-                    }}
-                  />
-                ) : null}
-                <div 
-                  className="avatar-initial-large" 
-                  style={{ display: avatarUrl ? 'none' : 'flex' }}
-                >
-                  {displayName.charAt(0).toUpperCase()}
+            <form className="profile-form" onSubmit={handleSubmit}>
+              <div className="form-section">
+                <label className="form-label">Profile Photo</label>
+                <div className="avatar-upload profile-avatar-upload">
+                  <div className="avatar-preview">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt="Profile"
+                        className="avatar-image"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="avatar-initial"
+                      style={{ display: avatarUrl ? 'none' : 'flex' }}
+                    >
+                      {profileInitial}
+                    </div>
+                  </div>
+                  <div className="avatar-actions">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageChange}
+                      accept="image/jpeg,image/jpg,image/png,image/gif"
+                      style={{ display: 'none' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? 'Uploading...' : 'Change Photo'}
+                    </button>
+                    <p className="form-hint">JPG, PNG or GIF. Max 2MB.</p>
+                  </div>
                 </div>
               </div>
-              <div className="profile-info-view">
-                <h2 className="profile-display-name">{displayName}</h2>
-                <p className="profile-username-view">@{username}</p>
-                {bio && <p className="profile-bio-view">{bio}</p>}
-                <div className="profile-privacy-badge">
-                  {profileData.isPrivate ? (
-                    <span className="privacy-badge private">🔒 Private</span>
-                  ) : (
-                    <span className="privacy-badge public">🌐 Public</span>
-                  )}
+
+              <div className="form-section">
+                <label className="form-label">Username</label>
+                <input
+                  type="text"
+                  name="username"
+                  className="auth-input"
+                  value={profileData.username}
+                  onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
+                  placeholder="Enter your username"
+                  required
+                  minLength={3}
+                />
+              </div>
+
+              <div className="form-section">
+                <label className="form-label">Display Name</label>
+                <input
+                  type="text"
+                  name="displayName"
+                  className="auth-input"
+                  value={profileData.displayName}
+                  onChange={(e) => setProfileData({ ...profileData, displayName: e.target.value })}
+                  placeholder="Enter your display name"
+                />
+              </div>
+
+              <div className="form-section">
+                <label className="form-label">Bio</label>
+                <textarea
+                  name="bio"
+                  className="auth-input bio-input"
+                  rows="4"
+                  value={profileData.bio}
+                  onChange={(e) => setProfileData({ ...profileData, bio: e.target.value })}
+                  placeholder="Tell us about yourself..."
+                  maxLength="200"
+                />
+                <p className="form-hint">Brief description for your profile. Max 200 characters.</p>
+              </div>
+
+              <div className="form-section">
+                <label className="form-label">Privacy</label>
+                <div className="privacy-toggle">
+                  <label className="privacy-toggle-label">
+                    <input
+                      type="radio"
+                      name="isPrivate"
+                      value="false"
+                      checked={!profileData.isPrivate}
+                      onChange={() => setProfileData({ ...profileData, isPrivate: false })}
+                    />
+                    <span className="privacy-option">
+                      <strong>Public</strong>
+                      <span className="privacy-description">Friends can see your stats and archive</span>
+                    </span>
+                  </label>
+                  <label className="privacy-toggle-label">
+                    <input
+                      type="radio"
+                      name="isPrivate"
+                      value="true"
+                      checked={profileData.isPrivate}
+                      onChange={() => setProfileData({ ...profileData, isPrivate: true })}
+                    />
+                    <span className="privacy-option">
+                      <strong>Private</strong>
+                      <span className="privacy-description">Only you can see your stats and archive</span>
+                    </span>
+                  </label>
                 </div>
               </div>
-              <div className="profile-actions-view">
-                <button 
-                  className="btn-primary"
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit Profile
+
+              <div className="form-actions">
+                <button type="button" className="btn-secondary" onClick={handleCancelEdit}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn-primary" disabled={loading}>
+                  {loading ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
-            </div>
+            </form>
+          </div>
+        ) : (
+          <div className="profile-shell">
+            <div className="profile-main-grid">
+              <section className="profile-glass-panel profile-identity-card">
+                <div className="profile-identity-top">
+                  <div className="profile-avatar-large profile-avatar-modern">
+                    {avatarUrl ? (
+                      <img
+                        src={avatarUrl}
+                        alt={displayName}
+                        className="avatar-image-large"
+                        onError={(e) => {
+                          e.target.style.display = 'none'
+                          e.target.nextSibling.style.display = 'flex'
+                        }}
+                      />
+                    ) : null}
+                    <div
+                      className="avatar-initial-large"
+                      style={{ display: avatarUrl ? 'none' : 'flex' }}
+                    >
+                      {profileInitial}
+                    </div>
+                  </div>
+                  <div 
+                    className={`profile-status-badge ${profileData.isPrivate ? 'is-private' : 'is-public'}`}
+                  >
+                    {profileData.isPrivate ? 'PRIVATE' : 'PUBLIC'}
+                  </div>
+                </div>
 
-            {/* Media Stats */}
-            <div className="profile-stats-section">
-              <h3 className="stats-section-title">Media Statistics</h3>
-              <div className="stats-grid">
-                <div className="stat-card">
-                  <div className="stat-icon">🎬</div>
-                  <div className="stat-value">{mediaStats.movies}</div>
-                  <div className="stat-label">Movies</div>
+                <div className="profile-identity-copy">
+                  <h1 className="profile-title">{displayName}</h1>
+                  <p className="profile-handle">@{username}</p>
+                  <p className="profile-bio">{bio || 'Curating your media universe in Archivum.'}</p>
                 </div>
-                <div className="stat-card">
-                  <div className="stat-icon">📺</div>
-                  <div className="stat-value">{mediaStats.tvShows}</div>
-                  <div className="stat-label">TV Shows</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon">📖</div>
-                  <div className="stat-value">{mediaStats.books}</div>
-                  <div className="stat-label">Books</div>
-                </div>
-                <div className="stat-card">
-                  <div className="stat-icon">🎮</div>
-                  <div className="stat-value">{mediaStats.games}</div>
-                  <div className="stat-label">Games</div>
-                </div>
-              </div>
-              <div className="stat-total">
-                <span className="stat-total-label">Total Media:</span>
-                <span className="stat-total-value">{mediaStats.total}</span>
-              </div>
-            </div>
 
-            {/* Archive Link */}
-            <div className="profile-archive-section">
-              <button 
-                className="btn-primary btn-large"
-                onClick={() => navigate('/library')}
-              >
-                View My Archive →
-              </button>
+                <div className="profile-stats-grid">
+                  {statItems.map((item) => (
+                    <div key={item.key} className="profile-stat-card">
+                      <span className="profile-stat-icon">{item.icon}</span>
+                      <span className="profile-stat-value">{item.value}</span>
+                      <span className="profile-stat-label">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="profile-total-row">
+                  <span>Total Media</span>
+                  <strong>{mediaStats.total}</strong>
+                </div>
+              </section>
+
+              <section className="profile-right-rail">
+                <div className="profile-action-row">
+                  <button className="profile-action-btn" onClick={() => setIsEditing(true)}>
+                    Edit Profile
+                  </button>
+                  <button className="profile-action-btn" onClick={() => navigate('/account-settings')}>
+                    Account
+                  </button>
+                  <button className="profile-action-btn" onClick={() => navigate('/library')}>
+                    Archive
+                  </button>
+                </div>
+
+                <div className="profile-glass-panel profile-milestones">
+                  <div className="profile-milestones-header">
+                    <h2>Recent Milestones</h2>
+                    <button className="profile-link-btn" onClick={() => navigate('/library')}>
+                      View all
+                    </button>
+                  </div>
+                  <div className="profile-milestones-list">
+                    {recentMilestones.length > 0 ? (
+                      recentMilestones.map((milestone) => (
+                        <div key={milestone.id} className="profile-milestone-card">
+                          <span className="profile-milestone-dot"></span>
+                          <div>
+                            <p className="profile-milestone-title">{milestone.title}</p>
+                            <p className="profile-milestone-meta">{milestone.mediaType}</p>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="profile-empty-milestone">
+                        Add media to your archive to start tracking milestones.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         )}
