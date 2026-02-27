@@ -18,6 +18,16 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  // Always merge metadata against freshest auth user to avoid stale overwrites.
+  const getLatestUserMetadata = async () => {
+    const { data, error } = await supabase.auth.getUser()
+    if (error) throw error
+    return {
+      latestUser: data?.user ?? null,
+      metadata: data?.user?.user_metadata || {},
+    }
+  }
+
   // Sign up new user
   const signUp = async (email, password, username) => {
     try {
@@ -82,9 +92,10 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (updates) => {
     try {
       setLoading(true)
+      const { latestUser, metadata } = await getLatestUserMetadata()
       const { data, error } = await supabase.auth.updateUser({
         data: {
-          ...user?.user_metadata,
+          ...metadata,
           ...updates,
         }
       })
@@ -93,6 +104,8 @@ export const AuthProvider = ({ children }) => {
       // Update local user state
       if (data.user) {
         setUser(data.user)
+      } else if (latestUser) {
+        setUser(latestUser)
       }
       
       return { data, error: null }
@@ -126,20 +139,25 @@ export const AuthProvider = ({ children }) => {
         throw new Error('File must be JPG, PNG, or GIF')
       }
 
-      // Create a unique filename using user ID
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`
-      const filePath = fileName
+      // Use a user-scoped path so common Supabase RLS policies can authorize inserts.
+      const fileExt = (file.name.split('.').pop() || 'jpg').toLowerCase()
+      const fileName = `${Date.now()}.${fileExt}`
+      const filePath = `${user.id}/${fileName}`
 
       // Upload to Supabase Storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true // Replace if exists
+          upsert: false
         })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        return {
+          data: null,
+          error: `Storage upload failed: ${uploadError.message}`,
+        }
+      }
 
       // Get public URL for the uploaded image
       const { data: urlData } = supabase.storage
@@ -147,18 +165,26 @@ export const AuthProvider = ({ children }) => {
         .getPublicUrl(filePath)
 
       // Update user metadata with the new avatar URL
+      const { latestUser, metadata } = await getLatestUserMetadata()
       const { data: updateData, error: updateError } = await supabase.auth.updateUser({
         data: {
-          ...user.user_metadata,
+          ...metadata,
           avatar_url: urlData.publicUrl,
         }
       })
 
-      if (updateError) throw updateError
+      if (updateError) {
+        return {
+          data: null,
+          error: `Profile metadata update failed: ${updateError.message}`,
+        }
+      }
 
       // Update local user state
       if (updateData.user) {
         setUser(updateData.user)
+      } else if (latestUser) {
+        setUser(latestUser)
       }
 
       return { 
@@ -166,7 +192,7 @@ export const AuthProvider = ({ children }) => {
         error: null 
       }
     } catch (error) {
-      return { data: null, error: error.message }
+      return { data: null, error: `Avatar upload failed: ${error.message}` }
     }
   }
 
